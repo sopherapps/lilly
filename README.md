@@ -9,9 +9,9 @@ Since it is based on FastAPI, it is modern, fast (high performance), and works w
 Lilly signifies peaceful beauty. _Lilly_ is thus an opinionated framework that ensures clean beautiful
 code structure that scales well for large projects and large teams.
 
--> It just adds more opinionated structure to the already beautiful [FastAPI](https://fastapi.tiangolo.com/).
--> It ensures that when someone is building a web application basing on Lilly, they don't need to think about the structure.
--> The developer should just know that it is a service-oriented architecture with each service having a layered architecture
+- It just adds more opinionated structure to the already beautiful [FastAPI](https://fastapi.tiangolo.com/).
+- It ensures that when someone is building a web application basing on Lilly, they don't need to think about the structure.
+- The developer should just know that it is a service-oriented architecture with each service having a layered architecture
 that ensures layers don't know what the other layer is doing.
 
 ## Key Features
