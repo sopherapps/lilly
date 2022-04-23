@@ -44,32 +44,24 @@ It also:
 #### Base Structures
 
 - All services must have the following modules or packages:
-  - `routes` (if a package is used, all `Service` subclasses must be imported into the `routes.__init__` module)
+  - `routes` (if a package is used, all `RouteSet` subclasses must be imported into the `routes.__init__` module)
   - `actions` (if a package is used,  all `Action` subclasses must be imported into the `actions.__init__` module)
   - `repositories` (if a package is used, all `Repository` subclasses must be imported into the `repositories.__init__` file)
   - `datasources` (if a package is used, all `DataSource` subclasses must be imported into the `datasources.__init__` file)
 - Just like [FastAPI Class-based views (CBV)](https://fastapi-utils.davidmontague.xyz/user-guide/class-based-views/) routes, 
  Lilly routes (which are technically methods of the Service subclass) should have the `post,get,put,patch...` decorators. 
  The format is exactly as it is in FastAPI. In addition, dependencies can be shared across multiple endpoints of the same service thanks to `FastApi CBV`.
-- `Service` should have overridden:
+- `RouteSet` should have overridden:
   - `_do(self, actionCls: Type[Action], *args, **kwargs)` which internally initializes the actionCls and calls `run()` on it
 - `Action` subclasses should have an overridden `run(self, *args, **kwargs) -> Any` method
   - The `run(self, *args, **kwargs)` method should be able to access any repositories using its own protected methods like
-    - `_get_one(self, repoCls: Type[Repository], record_id: Any, **kwargs) -> Any` method to get one record of id `record_id`
-    - `_get_many(self, repoCls: Type[Repository], skip: int, limit: int, filters: Dict[Any, Any], **kwargs) -> List[Any]` method to get many records that fulfil the `filters`
-    - `_create_one(self, repoCls: Type[Repository], data: Any, **kwargs) -> Any` method to create one record
-    - `_create_many(self, repoCls: Type[Repository], data: List[Any], **kwargs) -> List[Any]` method to create many records
-    - `_update_one(self, repoCls: Type[Repository], record_id: Any, data: Any, **kwargs) -> Any` method to update one record of id `record_id`
-    - `_update_many(self, repoCls: Type[Repository], data: Any, filters: Dict[Any, Any], **kwargs) -> Any` method to update many records that fulfil the `filters`
-    - `_remove_one(self, repoCls: Type[Repository], record_id: Any, **kwargs) -> Any` method to remove one record of id `record_id`
-    - `_remove_many(self, repoCls: Type[Repository], filters: Dict[Any, Any], **kwargs) -> Any` method to remove many records that fulfil the `filters`
 - `Repositories` subclasses should have overridden:
   - `get_one(self, record_id: Any, **kwargs) -> Any` method to get one record of id `record_id`
   - `get_many(self, skip: int, limit: int, filters: Dict[Any, Any], **kwargs) -> List[Any]` method to get many records that fulfil the `filters`
-  - `create_one(self, data: Any, **kwargs) -> Any` method to create one record
-  - `create_many(self, data: List[Any], **kwargs) -> List[Any]` method to create many records
-  - `update_one(self, record_id: Any, data: Any, **kwargs) -> Any` method to update one record of id `record_id`
-  - `update_many(self, data: Any, filters: Dict[Any, Any], **kwargs) -> Any` method to update many records that fulfil the `filters`
+  - `create_one(self, record: Any, **kwargs) -> Any` method to create one record
+  - `create_many(self, record: List[Any], **kwargs) -> List[Any]` method to create many records
+  - `update_one(self, record_id: Any, new_record: Any, **kwargs) -> Any` method to update one record of id `record_id`
+  - `update_many(self, new_record: Any, filters: Dict[Any, Any], **kwargs) -> Any` method to update many records that fulfil the `filters`
   - `remove_one(self, record_id: Any, **kwargs) -> Any` method to remove one record of id `record_id`
   - `remove_many(self, filters: Dict[Any, Any], **kwargs) -> Any` method to remove many records that fulfil the `filters`
   - `datasourceCls: Type[DataSource]` class attribute for the DataSource whose `connect()` method is to be called in any of the other methods to get its instance.
@@ -99,10 +91,63 @@ uvicorn main:app # for app defined in the main.py module
 - Use [CBV](https://fastapi-utils.davidmontague.xyz/user-guide/class-based-views/), but with one with router
 as one common router for all services as:
   - we will have an attribute in a different module from that where Lilly is defined. It is called `router: APIRouter`. Let the module be called `routing`
-  - `@cbv(router)` will be wrapped to become `@service`
-  - The `class based views` themselves will be subclasses of `Service`
-  - The `Service` class will have a protected method `_do(self, action_cls: Action, *args, **kwargs)` to make a call to any action
+  - `@cbv(router)` will be wrapped to become `@routeset`
+  - The `class based views` themselves will be subclasses of `RouteSet`
+  - The `RouteSet` class will have a protected method `_do(self, action_cls: Action, *args, **kwargs)` to make a call to any action
   - The `@router.post` or `@router.get` etc. on the class based views methods will all be aliased to their `post`, `get` etc counterparts
+
+## ToDo
+
+- [ ] Set up the abstract methods structure
+- [ ] Add some out-of-the-box base data sources e.g.
+  - [ ] SqlAlchemy
+  - [ ] Redis
+  - [ ] Memcached
+  - [ ] RESTAPI
+  - [ ] GraphQL
+  - [ ] RabbitMQ
+  - [ ] ActiveMQ
+  - [ ] Websockets
+  - [ ] Kafka
+  - [ ] Mongodb
+  - [ ] Couchbase
+  - [ ] DiskCache
+- [ ] Add some out-of-the-box base repositories e.g. 
+  - [ ] SqlAlchemyRepo (RDBM e.g. PostgreSQL, MySQL etc.)
+  - [ ] RedisRepo
+  - [ ] MemcachedRepo
+  - [ ] RESTAPIRepo
+  - [ ] GraphQLRepo
+  - [ ] RabbitMQRepo
+  - [ ] ActiveMQRepo
+  - [ ] WebsocketsRepo
+  - [ ] KafkaRepo
+  - [ ] MongodbRepo
+  - [ ] CouchbaseRepo
+  - [ ] DiskCacheRepo
+- [ ] Add some out-of-the-box base actions e.g.
+  - [ ] CreateOneAction
+  - [ ] CreateManyAction
+  - [ ] UpdateOneAction
+  - [ ] UpdateManyAction
+  - [ ] ReadOneAction
+  - [ ] ReadManyAction
+  - [ ] DeleteOneAction
+  - [ ] DeleteManyAction
+- [ ] Add some out-of-the-box base route sets
+  - [ ] CRUDRouteSet
+  - [ ] WebsocketRouteSet
+  - [ ] GraphQLRoute
+- [ ] Add example code in examples folder
+  - [ ] Todolist (CRUDRouteSet, SqlAlchemyRepo)
+  - [ ] RandomQuotes (WebsocketRouteSet, MongodbRepo) (quotes got from the Bible)
+  - [ ] Clock (WebsocketRouteSet, WebsocketsRepo)
+- [ ] Set up automatic documentation
+- [ ] Make repository public
+- [ ] Package it and publish it
+- [ ] Set up CI via Github actions
+- [ ] Set up CD via Github actions
+- [ ] Write about it in hashnode or Medium or both
 
 ## Inspiration
 
