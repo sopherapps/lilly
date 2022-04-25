@@ -238,3 +238,5 @@ fabric.properties
 /services
 settings.py
 main.py
+
+/.idea
