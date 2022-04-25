@@ -11,6 +11,7 @@ uvicorn main:app --reload
 ```
 """
 import importlib
+import os
 from enum import Enum
 from typing import Any, Optional, Type, Union, List, Sequence, Dict, Callable
 
@@ -24,7 +25,7 @@ from starlette.responses import JSONResponse
 from starlette.routing import BaseRoute
 from starlette.types import ASGIApp
 
-from lilly.util import get_folders
+from lilly import conf
 
 
 class Lilly(FastAPI):
@@ -39,15 +40,9 @@ class Lilly(FastAPI):
 
     def __init__(self, services_path: str = "services", settings_path: str = "settings", **extra: Any):
         super().__init__(**extra)
-        self._settings = importlib.import_module(settings_path)
-        services = get_folders(services_path)
-        # TODO: How to get the routers for each service
-        for service in services:
-            importlib.import_module()
-        self._services = importlib.import_module(services_path)
-        ext = importlib.import_module("lilly.routing.ext")
-        register_router = getattr(ext, "register_router")
-        register_router(self)
+        self._register_settings(settings_path)
+        self._register_routes(services_path)
+        self._register_router()
 
     def mount(self, path: str, app: ASGIApp, name: str = None) -> None:
         raise NotImplemented()
@@ -270,6 +265,36 @@ class Lilly(FastAPI):
         raise NotImplemented()
 
     def websocket(
-        self, path: str, name: Optional[str] = None
+            self, path: str, name: Optional[str] = None
     ) -> Callable[[DecoratedCallable], DecoratedCallable]:
         raise NotImplemented()
+
+    def _register_router(self):
+        """Registers the global router with the current application"""
+        ext = importlib.import_module("lilly.routing.ext")
+        register_router = getattr(ext, "register_router")
+        register_router(self)
+
+    @staticmethod
+    def _register_routes(services_path):
+        """Registers all the routes in the service folders into the runtime"""
+        services_os_path = convert_import_path_to_os_path(services_path)
+        services = get_folders_in_folder(services_os_path)
+        for service in services:
+            importlib.import_module(f".{service.name}.routes", services_path)
+
+    @staticmethod
+    def _register_settings(settings_path: str):
+        """Registers settings in lilly.conf.settings to be accessed as lilly.conf.settings.<cinstant's name>"""
+        conf.settings = importlib.import_module(settings_path)
+
+
+def convert_import_path_to_os_path(import_path: str) -> str:
+    """Converts an import path into an os path"""
+    path_sections = import_path.split(".")
+    return os.path.join(*path_sections)
+
+
+def get_folders_in_folder(parent_dir: str) -> List[os.DirEntry]:
+    """Returns all the folders in a given parent folder"""
+    return [folder for folder in os.scandir(parent_dir) if folder.is_dir(follow_symlinks=False)]  # noqa

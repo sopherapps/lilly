@@ -1,0 +1,11 @@
+anyio==3.5.0
+click==8.1.2
+fastapi==0.75.2
+fastapi-utils==0.2.1
+greenlet==1.1.2
+idna==3.3
+pydantic==1.9.0
+sniffio==1.2.0
+SQLAlchemy==1.4.35
+starlette==0.17.1
+typing_extensions==4.2.0

@@ -23,49 +23,156 @@ On top of the [key features of FastAPI](https://fastapi.tiangolo.com/) which inc
 - Easy: Designed to be easy to use and learn. Less time reading docs.
 - Short: Minimize code duplication. Multiple features from each parameter declaration. Fewer bugs.
 - Robust: Get production-ready code. With automatic interactive documentation.
-- Standards-based: Based on (and fully compatible with) the open standards for APIs: OpenAPI (previously known as Swagger) and JSON Schema.
+- Standards-based: Based on (and fully compatible with) the open standards for APIs: OpenAPI (previously known as
+  Swagger) and JSON Schema.
 
 It also:
 
 - Enforces a separation of concerns between service to service
-- Enforces a separation of concerns within the service between presentation, business, persistence, and data_source layers
+- Enforces a separation of concerns within the service between presentation, business, persistence, and data_source
+  layers
+
+## Quick Start
+
+- Ensure you have [Python 3.7](https://www.python.org/downloads/release/python-370/) or +3.7 installed
+- Create a new folder for your application
+
+```shell
+mkdir lilly_sample && cd lilly_sample
+```
+
+- Create the virtual environment and activate it
+
+```shell
+python3 -m venv env
+source env/bin/activate
+```
+
+- Install lilly
+
+```shell
+pip install lilly
+```
+
+- Create your first application based off the framework
+
+```shell
+python -m lilly create-app
+```
+
+This will create the following folder structure with some fully functional sample code
+
+```shell
+.
+  ├── main.py
+  ├──  settings.py
+  └── services
+      ├──  __init__.py
+      └── hello
+          ├── __init__.py
+          ├── actions.py
+          ├── datasources.py
+          ├── dtos.py
+          ├── repositories.py
+          └── routes.py
+```
+
+- Install uvicorn and run the app
+
+```shell
+pip install uvicorn
+uvicorn main:app --reload
+```
+
+- For you to add another service in the services folder, run the command:
+
+```shell
+python -m lilly create-service <service-name>
+```
+
+e.g.
+
+```shell
+python -m lilly create-service blog
+```
+
+- For more information about the commands, just run the `help` commands
+
+```shell
+python -m lilly --help
+python -m lilly create-app --help
+python -m lilly create-service --help
+```
 
 ## Design
 
 ### Requirements
 
+The following features are required.
+
 #### Configuration
 
-- All services are put in the `services` folder whose import path is passed as a parameter to the `Lilly` instance during initialization.
+- All services are put in the `services` folder whose import path is passed as a parameter to the `Lilly` instance
+  during initialization.
   (Default: folder called `services` on root of project)
-- All settings are put as constants in the `settings` python module whose import path is passed to `Lilly` instance at initialization.
+- All settings are put as constants in the `settings` python module whose import path is passed to `Lilly` instance at
+  initialization.
   (Default: `settings.py` on the root of project)
 
 #### Base Structures
 
 - All services must have the following modules or packages:
   - `routes` (if a package is used, all `RouteSet` subclasses must be imported into the `routes.__init__` module)
-  - `actions` (if a package is used,  all `Action` subclasses must be imported into the `actions.__init__` module)
-  - `repositories` (if a package is used, all `Repository` subclasses must be imported into the `repositories.__init__` file)
-  - `datasources` (if a package is used, all `DataSource` subclasses must be imported into the `datasources.__init__` file)
-- Just like [FastAPI Class-based views (CBV)](https://fastapi-utils.davidmontague.xyz/user-guide/class-based-views/) routes, 
- Lilly routes (which are technically methods of the Service subclass) should have the `post,get,put,patch...` decorators. 
- The format is exactly as it is in FastAPI. In addition, dependencies can be shared across multiple endpoints of the same service thanks to `FastApi CBV`.
-- `RouteSet` should have overridden:
-  - `_do(self, actionCls: Type[Action], *args, **kwargs)` which internally initializes the actionCls and calls `run()` on it
-- `Action` subclasses should have an overridden `run(self, *args, **kwargs) -> Any` method
-  - The `run(self, *args, **kwargs)` method should be able to access any repositories using its own protected methods like
-- `Repositories` subclasses should have overridden:
+  - `actions`
+  - `repositories`
+  - `datasources`
+  - `dtos`
+- Just like [FastAPI Class-based views (CBV)](https://fastapi-utils.davidmontague.xyz/user-guide/class-based-views/)
+  routes, Lilly routes (which are technically methods of the Service subclass) should have the `post,get,put,patch...`
+  decorators. The format is exactly as it is in FastAPI. In addition, dependencies can be shared across multiple
+  endpoints of the same service thanks to `FastApi CBV`.
+- `RouteSet` is the base class of all Routes. It should have the following methods overridden:
+  - `_do(self, actionCls: Type[Action], *args, **kwargs)` which internally initializes the actionCls and calls `run()`
+    on it
+- `Action` subclasses should have an overridden `run(self) -> Any` method
+  - The `run(self)` method should be able to access any repositories by directly importing any it needs
+- `Repository` subclasses should have public:
   - `get_one(self, record_id: Any, **kwargs) -> Any` method to get one record of id `record_id`
-  - `get_many(self, skip: int, limit: int, filters: Dict[Any, Any], **kwargs) -> List[Any]` method to get many records that fulfil the `filters`
+  - `get_many(self, skip: int, limit: int, filters: Dict[Any, Any], **kwargs) -> List[Any]` method to get many records
+    that fulfil the `filters`
   - `create_one(self, record: Any, **kwargs) -> Any` method to create one record
   - `create_many(self, record: List[Any], **kwargs) -> List[Any]` method to create many records
   - `update_one(self, record_id: Any, new_record: Any, **kwargs) -> Any` method to update one record of id `record_id`
-  - `update_many(self, new_record: Any, filters: Dict[Any, Any], **kwargs) -> Any` method to update many records that fulfil the `filters`
+  - `update_many(self, new_record: Any, filters: Dict[Any, Any], **kwargs) -> Any` method to update many records that
+    fulfil the `filters`
   - `remove_one(self, record_id: Any, **kwargs) -> Any` method to remove one record of id `record_id`
-  - `remove_many(self, filters: Dict[Any, Any], **kwargs) -> Any` method to remove many records that fulfil the `filters`
-  - `datasourceCls: Type[DataSource]` class attribute for the DataSource whose `connect()` method is to be called in any of the other methods to get its instance.
+  - `remove_many(self, filters: Dict[Any, Any], **kwargs) -> Any` method to remove many records that fulfil
+    the `filters`
+- `Repository` subclasses should also have the following methods overridden:
+  - `_get_one(self, datasource_connection: Any, record_id: Any, **kwargs) -> Any` method to get one record of
+    id `record_id`
+  - `_get_many(self, datasource_connection: Any, skip: int, limit: int, filters: Dict[Any, Any], **kwargs) -> List[Any]`
+    method to get many records that fulfil the `filters`
+  - `_create_one(self, datasource_connection: Any, record: Any, **kwargs) -> Any` method to create one record
+  - `_create_many(self, datasource_connection: Any, record: List[Any], **kwargs) -> List[Any]` method to create many
+    records
+  - `_update_one(self, datasource_connection: Any, record_id: Any, new_record: Any, **kwargs) -> Any` method to update
+    one record of id `record_id`
+  - `_update_many(self, datasource_connection: Any, new_record: Any, filters: Dict[Any, Any], **kwargs) -> Any` method
+    to update many records that fulfil the `filters`
+  - `_remove_one(self, datasource_connection: Any, record_id: Any, **kwargs) -> Any` method to remove one record of
+    id `record_id`
+  - `_remove_many(self, datasource_connection: Any, filters: Dict[Any, Any], **kwargs) -> Any` method to remove many
+    records that fulfil the `filters`
+  - `_datasource(self) -> DataSource` an @property-decorated method to return the DataSource whose `connect()` method is
+    to be called in any of the other methods to get its instance.
+  - `_to_output_dto(self, record: Any) -> BaseModel` method which converts any record from the data source raw to DTO
+    for the public methods
 - `DataSource` subclasses should have an overridden `connect(self)` method
+- `dtos` (Data Transfer Object classes) are subclasses of the `pydantic.BaseModel` which are to be used to move data
+  across the layers
+- Any setting added to the gazetted settings file can be accessed via `lilly.conf.settings.<setting_name>`
+  e.g. `lilly.conf.settings.APP_SETTING`
 
 #### Running
 
@@ -98,7 +205,11 @@ as one common router for all services as:
 
 ## ToDo
 
-- [ ] Set up the abstract methods structure
+- [x] Set up the abstract methods structure
+- [x] Set up the CLI to generate an app
+- [x] Set up the CLI to generate a service
+- [ ] Make repository public
+- [ ] Package it and publish it
 - [ ] Add some out-of-the-box base data sources e.g.
   - [ ] SqlAlchemy
   - [ ] Redis
@@ -143,8 +254,6 @@ as one common router for all services as:
   - [ ] RandomQuotes (WebsocketRouteSet, MongodbRepo) (quotes got from the Bible)
   - [ ] Clock (WebsocketRouteSet, WebsocketsRepo)
 - [ ] Set up automatic documentation
-- [ ] Make repository public
-- [ ] Package it and publish it
 - [ ] Set up CI via Github actions
 - [ ] Set up CD via Github actions
 - [ ] Write about it in hashnode or Medium or both
