@@ -208,8 +208,8 @@ as one common router for all services as:
 - [x] Set up the abstract methods structure
 - [x] Set up the CLI to generate an app
 - [x] Set up the CLI to generate a service
-- [ ] Make repository public
-- [ ] Package it and publish it
+- [x] Make repository public
+- [x] Package it and publish it
 - [ ] Add some out-of-the-box base data sources e.g.
   - [ ] SqlAlchemy
   - [ ] Redis
