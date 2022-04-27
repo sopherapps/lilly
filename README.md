@@ -169,11 +169,19 @@ The two `create` commands typically create a service folder with the follwoing s
 ```
 
 The `Action`s can be found in the `actions.py` module. Customize them accordingly following the guidance of the already
-existing code. The `DataSource`s can be found in the `datasources.py` module. Customize them accordingly following the
-guidance of the already existing code. The `Repository`s can be found in the `respositories.py` module. Customize them
-accordingly following the guidance of the already existing code. The `RouteSet`s can be found in the `routes.py` module.
-Customize them accordingly following the guidance of the already existing code. The `DataModel` DTOs can be found in
-the `dtos.py` module. Customize them accordingly following the guidance of the already existing code.
+existing code.
+
+The `DataSource`s can be found in the `datasources.py` module. Customize them accordingly following the guidance of the
+already existing code.
+
+The `Repository`s can be found in the `respositories.py` module. Customize them accordingly following the guidance of
+the already existing code.
+
+The `RouteSet`s can be found in the `routes.py` module. Customize them accordingly following the guidance of the already
+existing code.
+
+The `DataModel` DTOs can be found in the `dtos.py` module. Customize them accordingly following the guidance of the
+already existing code.
 
 ### Data Sources
 
@@ -201,11 +209,20 @@ It can be used in a repository as in this example:
 ```python
 from typing import Any
 from sqlalchemy.orm import declarative_base
+from sqlalchemy import Column, Integer, String
 from lilly.repositories import Repository
 from lilly.datasources import SQLAlchemyDataSource, DataSource
 from lilly.conf import settings
 
 Base = declarative_base()
+
+
+class UserModel(Base):
+  """The database model for users"""
+  __tablename__ = "users"
+  id = Column(Integer, primary_key=True)
+  name = Column(String)
+  email = Column(String)
 
 
 class NamesRepository(Repository):
