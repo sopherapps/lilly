@@ -45,7 +45,7 @@ class Lilly(FastAPI):
         self._register_router()
 
     def mount(self, path: str, app: ASGIApp, name: str = None) -> None:
-        raise NotImplemented()
+        raise NotImplementedError()
 
     def get(
         self,
@@ -76,7 +76,7 @@ class Lilly(FastAPI):
             generate_unique_id
         ),
     ) -> Callable[[DecoratedCallable], DecoratedCallable]:
-        raise NotImplemented()
+        raise NotImplementedError()
 
     def post(
         self,
@@ -107,7 +107,7 @@ class Lilly(FastAPI):
             generate_unique_id
         ),
     ) -> Callable[[DecoratedCallable], DecoratedCallable]:
-        raise NotImplemented()
+        raise NotImplementedError()
 
     def patch(
         self,
@@ -138,7 +138,7 @@ class Lilly(FastAPI):
             generate_unique_id
         ),
     ) -> Callable[[DecoratedCallable], DecoratedCallable]:
-        raise NotImplemented()
+        raise NotImplementedError()
 
     def put(
         self,
@@ -169,7 +169,7 @@ class Lilly(FastAPI):
             generate_unique_id
         ),
     ) -> Callable[[DecoratedCallable], DecoratedCallable]:
-        raise NotImplemented()
+        raise NotImplementedError()
 
     def delete(
         self,
@@ -200,7 +200,7 @@ class Lilly(FastAPI):
             generate_unique_id
         ),
     ) -> Callable[[DecoratedCallable], DecoratedCallable]:
-        raise NotImplemented()
+        raise NotImplementedError()
 
     def options(
         self,
@@ -231,7 +231,7 @@ class Lilly(FastAPI):
             generate_unique_id
         ),
     ) -> Callable[[DecoratedCallable], DecoratedCallable]:
-        raise NotImplemented()
+        raise NotImplementedError()
 
     def head(
         self,
@@ -262,12 +262,12 @@ class Lilly(FastAPI):
             generate_unique_id
         ),
     ) -> Callable[[DecoratedCallable], DecoratedCallable]:
-        raise NotImplemented()
+        raise NotImplementedError()
 
     def websocket(
             self, path: str, name: Optional[str] = None
     ) -> Callable[[DecoratedCallable], DecoratedCallable]:
-        raise NotImplemented()
+        raise NotImplementedError()
 
     def _register_router(self):
         """Registers the global router with the current application"""

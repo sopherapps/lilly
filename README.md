@@ -84,6 +84,8 @@ pip install uvicorn
 uvicorn main:app --reload
 ```
 
+- View the OpenAPI docs at [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
+
 - For you to add another service in the services folder, run the command:
 
 ```shell
@@ -190,13 +192,13 @@ uvicorn main:app # for app defined in the main.py module
 - During `Lilly` initialization, all routes are automatically imported using `importlib.import_module` by concatenating
   the `<services_path>.<service_name>.routes` e.g. `services.hello.routes`.
 - In order to make route definition solely dependent on folder structure, we change `@app.get` decorators to `@get`
-- `app.get`, `app.post` etc. should throw `NotImplemented` errors
+- `app.get`, `app.post` etc. should throw `NotImplementedError` errors
 - The whole app has one instance of the `router: APIRouter`. It is defined in the `routing` module.
 - In that same `routing` module, `router.get`, `router.post`, `router.delete`, `router.put`, `router.patch`
   , `router.head`, `router.options` are all aliased by their post-period `suffixes` e.g. `get`, `post` etc.
 - When initializing in __init__ of Lilly, we fetch the routes in all services then call `self.include_router(router)`.
-- `app.mount` should throw an `NotImplemented` error because it complicates the app structure if used to mount other
-  applications, considering the fact that all routes share one `router` instance.
+- `app.mount` should throw an `NotImplementedError` error because it complicates the app structure if used to mount
+  other applications, considering the fact that all routes share one `router` instance.
 - In order to have a protected method `_do()` to call an action within the routers, we use class-based views
   from [fastapi-utils CBV](https://fastapi-utils.davidmontague.xyz/user-guide/class-based-views/).
 - All these class based views will be subclasses of `RouteSet` which has an overridable protected

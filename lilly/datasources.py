@@ -15,4 +15,4 @@ class DataSource:
         This should connect to the actual source of data and return an appropriate connection instance
         For instance, this could return an SQL alchemy db session
         """
-        raise NotImplemented()
+        raise NotImplementedError()
