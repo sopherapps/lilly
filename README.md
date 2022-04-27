@@ -389,7 +389,7 @@ uvicorn main:app # for app defined in the main.py module
   - [ ] RandomQuotes (WebsocketRouteSet, MongodbRepo) (quotes got from the Bible)
   - [ ] Clock (WebsocketRouteSet, WebsocketsRepo)
 - [ ] Set up automatic documentation
-- [ ] Set up CI via Github actions
+- [x] Set up CI via Github actions
 - [ ] Set up CD via Github actions
 - [ ] Write about it in hashnode or Medium or both
 
