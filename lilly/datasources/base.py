@@ -1,4 +1,4 @@
-"""Module defines the DataSource class"""
+"""Module defines the DataSource base class"""
 from abc import abstractmethod
 from typing import Any
 

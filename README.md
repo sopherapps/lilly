@@ -133,6 +133,92 @@ pip install -r requirements.txt
 python -m unittest  discover -s test
 ```
 
+## Usage
+
+Lilly can be used easily in your app.
+
+To create a new app, we use the command:
+
+```shell
+python -m lilly create-app <app-name>
+```
+
+To add another service in the service folder, we use the command:
+
+```shell
+python -m lilly create-service <service-name>
+```
+
+These two commands create a starting point with a sample fully-functional web app whose docs can be found at
+[http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs) when the app is run locally with the command.
+
+```shell
+uvicorn main:app --reload
+```
+
+The two `create` commands typically create a service folder with the follwoing structure
+
+```shell
+      └── <service-name>
+          ├── __init__.py
+          ├── actions.py
+          ├── datasources.py
+          ├── dtos.py
+          ├── repositories.py
+          └── routes.py
+```
+
+The `Action`s can be found in the `actions.py` module. Customize them accordingly following the guidance of the already
+existing code. The `DataSource`s can be found in the `datasources.py` module. Customize them accordingly following the
+guidance of the already existing code. The `Repository`s can be found in the `respositories.py` module. Customize them
+accordingly following the guidance of the already existing code. The `RouteSet`s can be found in the `routes.py` module.
+Customize them accordingly following the guidance of the already existing code. The `DataModel` DTOs can be found in
+the `dtos.py` module. Customize them accordingly following the guidance of the already existing code.
+
+### Data Sources
+
+To create a new data source, one needs to subclass the `DataSource` class and override the `connect(self)` method.
+
+```python
+from typing import Any
+from lilly.datasources import DataSource
+
+
+class SampleDataSource(DataSource):
+  def connect(self) -> Any:
+    # do some stuff and return a connection
+    pass
+```
+
+To make life easier for the developer, we have created a few DataSources that can be used or overridden. They include:
+
+#### 1. SQLAlchemyDataSource
+
+This connects to any relational database e.g. MySQL, PostgreSQL, Sqlite etc.
+using [SQLAlchemy](https://www.sqlalchemy.org/)
+It can be used in a repository as in this example:
+
+```python
+from typing import Any
+from sqlalchemy.orm import declarative_base
+from lilly.repositories import Repository
+from lilly.datasources import SQLAlchemyDataSource, DataSource
+from lilly.conf import settings
+
+Base = declarative_base()
+
+
+class NamesRepository(Repository):
+  """Repository for saving and retrieving random names"""
+  _names_db = SQLAlchemyDataSource(db_uri=settings.DATABASE_URL, declarative_meta=Base)
+
+  # -- other important methods need to be overridden also. I have excluded them for brevity.
+
+  @property
+  def _datasource(self) -> DataSource:
+    return self._names_db
+```
+
 ## Design
 
 ### Requirements
@@ -243,7 +329,7 @@ uvicorn main:app # for app defined in the main.py module
 - [x] Make repository public
 - [x] Package it and publish it
 - [ ] Add some out-of-the-box base data sources e.g.
-  - [ ] SqlAlchemy
+  - [x] SqlAlchemy
   - [ ] Redis
   - [ ] Memcached
   - [ ] RESTAPI
