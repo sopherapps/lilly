@@ -106,6 +106,33 @@ python -m lilly create-app --help
 python -m lilly create-service --help
 ```
 
+## How to Run tests
+
+- Clone the repository
+
+```shell
+git clone git@github.com:sopherapps/lilly.git 
+```
+
+- Create virtual environment for Python 3.7 and above and activate it
+
+```shell
+python3 -m venv env
+source env/bin/activate
+```
+
+- Install requirements
+
+```shell
+pip install -r requirements.txt
+```
+
+- Run the test command
+
+```shell
+python -m unittest  discover -s test
+```
+
 ## Design
 
 ### Requirements
