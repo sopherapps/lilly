@@ -183,25 +183,28 @@ uvicorn main:app # for app defined in the main.py module
 ```
 ### Implementation Ideas
 
-- Create a `Lilly` class as a subclass of FastAPI.
-  - `Lilly` class should have the following properties set during initialization or else the defaults are applied
-    - services_path (an import path as string)
-    - settings_path (an import path as string)
-  - All routes, actions, repositories and datasources are automatically imported using `importlib.import_module` by concatenating the `services` import path to the respective module e.g. `actions`, `routes` etc.
-- in order to make route definition solely dependent on folder structure, we change `@app.get` decorators to `@get`
-- `app.get`, `app.post` etc. should throw `NotImplemented` errors (unless this effectively breaks the code. In this case, check the difference between when app.get is used and when router.get is used)
-- we will have an attribute in a different module from that where Lilly is defined. It is called `router: APIRouter`. Let the module be called `routing`
-- in that same module, there will be functions called `get`, `post`etc) that are just returning router.get, router.post etc.
-- When initializing in __init__ of Lilly, we will fetch all services and call `self.include_router(router)`. 
-- `router` will be imported dynamically after all the routes in all services are imported.
-- `app.mount` should throw an `NotImplemented` error because it will complicate the app structure if used
-- Use [CBV](https://fastapi-utils.davidmontague.xyz/user-guide/class-based-views/), but with one with router
-as one common router for all services as:
-  - we will have an attribute in a different module from that where Lilly is defined. It is called `router: APIRouter`. Let the module be called `routing`
-  - `@cbv(router)` will be wrapped to become `@routeset`
-  - The `class based views` themselves will be subclasses of `RouteSet`
-  - The `RouteSet` class will have a protected method `_do(self, action_cls: Action, *args, **kwargs)` to make a call to any action
-  - The `@router.post` or `@router.get` etc. on the class based views methods will all be aliased to their `post`, `get` etc counterparts
+- The application is an instance of the `Lilly` class which is a subclass of the `FastAPI` class.
+- To create a `Lilly` instance, we need to pass in the following parameters:
+  - services_path (an import path as string, default is "services")
+  - settings_path (an import path as string, default is "settings")
+- During `Lilly` initialization, all routes are automatically imported using `importlib.import_module` by concatenating
+  the `<services_path>.<service_name>.routes` e.g. `services.hello.routes`.
+- In order to make route definition solely dependent on folder structure, we change `@app.get` decorators to `@get`
+- `app.get`, `app.post` etc. should throw `NotImplemented` errors
+- The whole app has one instance of the `router: APIRouter`. It is defined in the `routing` module.
+- In that same `routing` module, `router.get`, `router.post`, `router.delete`, `router.put`, `router.patch`
+  , `router.head`, `router.options` are all aliased by their post-period `suffixes` e.g. `get`, `post` etc.
+- When initializing in __init__ of Lilly, we fetch the routes in all services then call `self.include_router(router)`.
+- `app.mount` should throw an `NotImplemented` error because it complicates the app structure if used to mount other
+  applications, considering the fact that all routes share one `router` instance.
+- In order to have a protected method `_do()` to call an action within the routers, we use class-based views
+  from [fastapi-utils CBV](https://fastapi-utils.davidmontague.xyz/user-guide/class-based-views/).
+- All these class based views will be subclasses of `RouteSet` which has an overridable protected
+  method `_do(self, action_cls: Action, *args, **kwargs)` to make a call to any action
+- All these class based views will have a decorator `@routeset` which is an alias of `@cbv(router)` where `router` is
+  the router common to all routes
+- All the routes in the app have one router so their endpoints need to be different and explicit since no mounting will
+  be allowed
 
 ## ToDo
 
