@@ -9,11 +9,11 @@ class TestLilly(unittest.TestCase):
 
     def setUp(self) -> None:
         """Initialize some common variables"""
-        self.app = Lilly(settings_path="assets.mock_settings", services_path="assets.mock_services")
+        self.app = Lilly(settings_path="test.assets.mock_settings", services_path="test.assets.mock_services")
 
     def test_mount(self):
         """A call to mount should raise NotImplementedError exception"""
-        another_app = Lilly(settings_path="assets.mock_settings", services_path="assets.mock_services")
+        another_app = Lilly(settings_path="test.assets.mock_settings", services_path="test.assets.mock_services")
         self.assertRaises(NotImplementedError, self.app.mount, "/another", another_app)
 
     def test_register_settings(self):

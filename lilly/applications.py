@@ -297,4 +297,6 @@ def convert_import_path_to_os_path(import_path: str) -> str:
 
 def get_folders_in_folder(parent_dir: str) -> List[os.DirEntry]:
     """Returns all the folders in a given parent folder"""
-    return [folder for folder in os.scandir(parent_dir) if folder.is_dir(follow_symlinks=False)]  # noqa
+    invalid_folders = ("__pycache__",)
+    return [folder for folder in os.scandir(parent_dir) if
+            folder.is_dir(follow_symlinks=False) and folder.name not in invalid_folders]  # noqa
