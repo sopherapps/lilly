@@ -45,7 +45,7 @@ class Lilly(FastAPI):
         self._register_router()
 
     def mount(self, path: str, app: ASGIApp, name: str = None) -> None:
-        raise NotImplemented()
+        raise NotImplementedError()
 
     def get(
         self,
@@ -76,7 +76,7 @@ class Lilly(FastAPI):
             generate_unique_id
         ),
     ) -> Callable[[DecoratedCallable], DecoratedCallable]:
-        raise NotImplemented()
+        raise NotImplementedError()
 
     def post(
         self,
@@ -107,7 +107,7 @@ class Lilly(FastAPI):
             generate_unique_id
         ),
     ) -> Callable[[DecoratedCallable], DecoratedCallable]:
-        raise NotImplemented()
+        raise NotImplementedError()
 
     def patch(
         self,
@@ -138,7 +138,7 @@ class Lilly(FastAPI):
             generate_unique_id
         ),
     ) -> Callable[[DecoratedCallable], DecoratedCallable]:
-        raise NotImplemented()
+        raise NotImplementedError()
 
     def put(
         self,
@@ -169,7 +169,7 @@ class Lilly(FastAPI):
             generate_unique_id
         ),
     ) -> Callable[[DecoratedCallable], DecoratedCallable]:
-        raise NotImplemented()
+        raise NotImplementedError()
 
     def delete(
         self,
@@ -200,7 +200,7 @@ class Lilly(FastAPI):
             generate_unique_id
         ),
     ) -> Callable[[DecoratedCallable], DecoratedCallable]:
-        raise NotImplemented()
+        raise NotImplementedError()
 
     def options(
         self,
@@ -231,7 +231,7 @@ class Lilly(FastAPI):
             generate_unique_id
         ),
     ) -> Callable[[DecoratedCallable], DecoratedCallable]:
-        raise NotImplemented()
+        raise NotImplementedError()
 
     def head(
         self,
@@ -262,12 +262,12 @@ class Lilly(FastAPI):
             generate_unique_id
         ),
     ) -> Callable[[DecoratedCallable], DecoratedCallable]:
-        raise NotImplemented()
+        raise NotImplementedError()
 
     def websocket(
             self, path: str, name: Optional[str] = None
     ) -> Callable[[DecoratedCallable], DecoratedCallable]:
-        raise NotImplemented()
+        raise NotImplementedError()
 
     def _register_router(self):
         """Registers the global router with the current application"""
@@ -297,4 +297,6 @@ def convert_import_path_to_os_path(import_path: str) -> str:
 
 def get_folders_in_folder(parent_dir: str) -> List[os.DirEntry]:
     """Returns all the folders in a given parent folder"""
-    return [folder for folder in os.scandir(parent_dir) if folder.is_dir(follow_symlinks=False)]  # noqa
+    invalid_folders = ("__pycache__",)
+    return [folder for folder in os.scandir(parent_dir) if
+            folder.is_dir(follow_symlinks=False) and folder.name not in invalid_folders]  # noqa

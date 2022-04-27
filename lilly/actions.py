@@ -11,4 +11,4 @@ class Action:
     @abstractmethod
     def run(self):
         """This does the actual business logic. It is called by the route's _do() method"""
-        raise NotImplemented()
+        raise NotImplementedError()

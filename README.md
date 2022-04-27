@@ -84,6 +84,8 @@ pip install uvicorn
 uvicorn main:app --reload
 ```
 
+- View the OpenAPI docs at [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
+
 - For you to add another service in the services folder, run the command:
 
 ```shell
@@ -102,6 +104,136 @@ python -m lilly create-service blog
 python -m lilly --help
 python -m lilly create-app --help
 python -m lilly create-service --help
+```
+
+## How to Run tests
+
+- Clone the repository
+
+```shell
+git clone git@github.com:sopherapps/lilly.git 
+```
+
+- Create virtual environment for Python 3.7 and above and activate it
+
+```shell
+python3 -m venv env
+source env/bin/activate
+```
+
+- Install requirements
+
+```shell
+pip install -r requirements.txt
+```
+
+- Run the test command
+
+```shell
+python -m unittest  discover -s test
+```
+
+## Usage
+
+Lilly can be used easily in your app.
+
+To create a new app, we use the command:
+
+```shell
+python -m lilly create-app <app-name>
+```
+
+To add another service in the service folder, we use the command:
+
+```shell
+python -m lilly create-service <service-name>
+```
+
+These two commands create a starting point with a sample fully-functional web app whose docs can be found at
+[http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs) when the app is run locally with the command.
+
+```shell
+uvicorn main:app --reload
+```
+
+The two `create` commands typically create a service folder with the follwoing structure
+
+```shell
+      └── <service-name>
+          ├── __init__.py
+          ├── actions.py
+          ├── datasources.py
+          ├── dtos.py
+          ├── repositories.py
+          └── routes.py
+```
+
+The `Action`s can be found in the `actions.py` module. Customize them accordingly following the guidance of the already
+existing code.
+
+The `DataSource`s can be found in the `datasources.py` module. Customize them accordingly following the guidance of the
+already existing code.
+
+The `Repository`s can be found in the `respositories.py` module. Customize them accordingly following the guidance of
+the already existing code.
+
+The `RouteSet`s can be found in the `routes.py` module. Customize them accordingly following the guidance of the already
+existing code.
+
+The `DataModel` DTOs can be found in the `dtos.py` module. Customize them accordingly following the guidance of the
+already existing code.
+
+### Data Sources
+
+To create a new data source, one needs to subclass the `DataSource` class and override the `connect(self)` method.
+
+```python
+from typing import Any
+from lilly.datasources import DataSource
+
+
+class SampleDataSource(DataSource):
+  def connect(self) -> Any:
+    # do some stuff and return a connection
+    pass
+```
+
+To make life easier for the developer, we have created a few DataSources that can be used or overridden. They include:
+
+#### 1. SQLAlchemyDataSource
+
+This connects to any relational database e.g. MySQL, PostgreSQL, Sqlite etc.
+using [SQLAlchemy](https://www.sqlalchemy.org/)
+It can be used in a repository as in this example:
+
+```python
+from typing import Any
+from sqlalchemy.orm import declarative_base
+from sqlalchemy import Column, Integer, String
+from lilly.repositories import Repository
+from lilly.datasources import SQLAlchemyDataSource, DataSource
+from lilly.conf import settings
+
+Base = declarative_base()
+
+
+class UserModel(Base):
+  """The database model for users"""
+  __tablename__ = "users"
+  id = Column(Integer, primary_key=True)
+  name = Column(String)
+  email = Column(String)
+
+
+class NamesRepository(Repository):
+  """Repository for saving and retrieving random names"""
+  _names_db = SQLAlchemyDataSource(db_uri=settings.DATABASE_URL, declarative_meta=Base)
+
+  # -- other important methods need to be overridden also. I have excluded them for brevity.
+
+  @property
+  def _datasource(self) -> DataSource:
+    return self._names_db
 ```
 
 ## Design
@@ -183,25 +315,28 @@ uvicorn main:app # for app defined in the main.py module
 ```
 ### Implementation Ideas
 
-- Create a `Lilly` class as a subclass of FastAPI.
-  - `Lilly` class should have the following properties set during initialization or else the defaults are applied
-    - services_path (an import path as string)
-    - settings_path (an import path as string)
-  - All routes, actions, repositories and datasources are automatically imported using `importlib.import_module` by concatenating the `services` import path to the respective module e.g. `actions`, `routes` etc.
-- in order to make route definition solely dependent on folder structure, we change `@app.get` decorators to `@get`
-- `app.get`, `app.post` etc. should throw `NotImplemented` errors (unless this effectively breaks the code. In this case, check the difference between when app.get is used and when router.get is used)
-- we will have an attribute in a different module from that where Lilly is defined. It is called `router: APIRouter`. Let the module be called `routing`
-- in that same module, there will be functions called `get`, `post`etc) that are just returning router.get, router.post etc.
-- When initializing in __init__ of Lilly, we will fetch all services and call `self.include_router(router)`. 
-- `router` will be imported dynamically after all the routes in all services are imported.
-- `app.mount` should throw an `NotImplemented` error because it will complicate the app structure if used
-- Use [CBV](https://fastapi-utils.davidmontague.xyz/user-guide/class-based-views/), but with one with router
-as one common router for all services as:
-  - we will have an attribute in a different module from that where Lilly is defined. It is called `router: APIRouter`. Let the module be called `routing`
-  - `@cbv(router)` will be wrapped to become `@routeset`
-  - The `class based views` themselves will be subclasses of `RouteSet`
-  - The `RouteSet` class will have a protected method `_do(self, action_cls: Action, *args, **kwargs)` to make a call to any action
-  - The `@router.post` or `@router.get` etc. on the class based views methods will all be aliased to their `post`, `get` etc counterparts
+- The application is an instance of the `Lilly` class which is a subclass of the `FastAPI` class.
+- To create a `Lilly` instance, we need to pass in the following parameters:
+  - services_path (an import path as string, default is "services")
+  - settings_path (an import path as string, default is "settings")
+- During `Lilly` initialization, all routes are automatically imported using `importlib.import_module` by concatenating
+  the `<services_path>.<service_name>.routes` e.g. `services.hello.routes`.
+- In order to make route definition solely dependent on folder structure, we change `@app.get` decorators to `@get`
+- `app.get`, `app.post` etc. should throw `NotImplementedError` errors
+- The whole app has one instance of the `router: APIRouter`. It is defined in the `routing` module.
+- In that same `routing` module, `router.get`, `router.post`, `router.delete`, `router.put`, `router.patch`
+  , `router.head`, `router.options` are all aliased by their post-period `suffixes` e.g. `get`, `post` etc.
+- When initializing in __init__ of Lilly, we fetch the routes in all services then call `self.include_router(router)`.
+- `app.mount` should throw an `NotImplementedError` error because it complicates the app structure if used to mount
+  other applications, considering the fact that all routes share one `router` instance.
+- In order to have a protected method `_do()` to call an action within the routers, we use class-based views
+  from [fastapi-utils CBV](https://fastapi-utils.davidmontague.xyz/user-guide/class-based-views/).
+- All these class based views will be subclasses of `RouteSet` which has an overridable protected
+  method `_do(self, action_cls: Action, *args, **kwargs)` to make a call to any action
+- All these class based views will have a decorator `@routeset` which is an alias of `@cbv(router)` where `router` is
+  the router common to all routes
+- All the routes in the app have one router so their endpoints need to be different and explicit since no mounting will
+  be allowed
 
 ## ToDo
 
@@ -211,7 +346,7 @@ as one common router for all services as:
 - [x] Make repository public
 - [x] Package it and publish it
 - [ ] Add some out-of-the-box base data sources e.g.
-  - [ ] SqlAlchemy
+  - [x] SqlAlchemy
   - [ ] Redis
   - [ ] Memcached
   - [ ] RESTAPI
@@ -254,7 +389,7 @@ as one common router for all services as:
   - [ ] RandomQuotes (WebsocketRouteSet, MongodbRepo) (quotes got from the Bible)
   - [ ] Clock (WebsocketRouteSet, WebsocketsRepo)
 - [ ] Set up automatic documentation
-- [ ] Set up CI via Github actions
+- [x] Set up CI via Github actions
 - [ ] Set up CD via Github actions
 - [ ] Write about it in hashnode or Medium or both
 

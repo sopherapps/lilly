@@ -23,7 +23,7 @@ class Repository:
     @abstractmethod
     def _get_one(self, datasource_connection: Any, record_id: Any, **kwargs) -> Any:
         """method to get one record of id `record_id`. This should be overridden"""
-        raise NotImplemented()
+        raise NotImplementedError()
 
     def get_one(self, record_id: Any, **kwargs) -> BaseModel:
         """method to get one record of id `record_id`"""
@@ -35,7 +35,7 @@ class Repository:
     def _get_many(self, datasource_connection: Any, skip: int, limit: int, filters: Dict[Any, Any], **kwargs) -> List[
         Any]:
         """method to get many records that fulfil the `filters`. This should be overridden"""
-        raise NotImplemented()
+        raise NotImplementedError()
 
     def get_many(self, skip: int, limit: int, filters: Dict[Any, Any], **kwargs) -> List[BaseModel]:
         """method to get many records that fulfil the `filters`"""
@@ -46,7 +46,7 @@ class Repository:
     @abstractmethod
     def _create_one(self, datasource_connection: Any, record: Any, **kwargs) -> Any:
         """method to create one record. This should be overridden. Returns the created record."""
-        raise NotImplemented()
+        raise NotImplementedError()
 
     def create_one(self, record: Any, **kwargs) -> BaseModel:
         """method to create one record, returning the created record"""
@@ -57,7 +57,7 @@ class Repository:
     @abstractmethod
     def _create_many(self, datasource_connection: Any, records: List[Any], **kwargs) -> List[Any]:
         """method to create many records. This should be overridden. Returns the created records."""
-        raise NotImplemented()
+        raise NotImplementedError()
 
     def create_many(self, records: List[Any], **kwargs) -> List[BaseModel]:
         """method to create many records. Returning the created records."""
@@ -71,7 +71,7 @@ class Repository:
         method to update one record of id `record_id`. This should be overridden
         It should return the updated record.
         """
-        raise NotImplemented()
+        raise NotImplementedError()
 
     def update_one(self, record_id: Any, new_record: Any, **kwargs) -> BaseModel:
         """method to update one record of id `record_id`. Returning the updated record."""
@@ -85,7 +85,7 @@ class Repository:
         method to update many records that fulfil the `filters`. This should be overridden
         It should return the updated records.
         """
-        raise NotImplemented()
+        raise NotImplementedError()
 
     def update_many(self, new_record: Any, filters: Dict[Any, Any], **kwargs) -> List[BaseModel]:
         """method to update many records that fulfil the `filters`. Returning the updated records"""
@@ -99,7 +99,7 @@ class Repository:
         method to remove one record of id `record_id`. This should be overridden
         It should return the removed record.
         """
-        raise NotImplemented()
+        raise NotImplementedError()
 
     def remove_one(self, record_id: Any, **kwargs) -> BaseModel:
         """
@@ -115,7 +115,7 @@ class Repository:
         method to remove many records that fulfil the `filters`. This should be overridden
         It should return the removed records.
         """
-        raise NotImplemented()
+        raise NotImplementedError()
 
     def remove_many(self, filters: Dict[Any, Any], **kwargs) -> List[BaseModel]:
         """method to remove many records that fulfil the `filters`, returning the deleted records"""
@@ -127,12 +127,12 @@ class Repository:
     @abstractmethod
     def _datasource(self) -> DataSource:
         """Gets the datasource to be used in the repository"""
-        raise NotImplemented
+        raise NotImplementedError()
 
     @abstractmethod
     def _to_output_dto(self, record: Any) -> BaseModel:
         """Converts the given data into the appropriate data transfer object"""
-        raise NotImplemented
+        raise NotImplementedError()
 
     def _get_connection(self) -> Any:
         """Returns the connection to the data source"""
