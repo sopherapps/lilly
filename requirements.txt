@@ -16,8 +16,10 @@ idna==3.3
 importlib-metadata==4.11.3
 keyring==23.5.0
 pkginfo==1.8.2
+psycopg2-binary==2.9.3
 pydantic==1.9.0
 Pygments==2.12.0
+python-dotenv==0.20.0
 readme-renderer==35.0
 requests==2.27.1
 requests-toolbelt==0.9.1

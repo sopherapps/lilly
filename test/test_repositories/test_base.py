@@ -1,4 +1,4 @@
-"""Tests for the repository-related code"""
+"""Tests for the base Repository class"""
 
 import unittest
 from unittest.mock import MagicMock, PropertyMock, patch, call
@@ -95,7 +95,7 @@ class TestRepository(unittest.TestCase):
         values = mock_repo.update_many(new_record=new_record, filters=filters, **random_kwargs)
 
         mock_repo._update_many.assert_called_with(
-            self.connection, new_record=new_record, filters=filters, **random_kwargs)
+            self.connection, new_record, filters=filters, **random_kwargs)
         mock_repo._to_output_dto.assert_has_calls([call(item) for item in items])
         self.assertListEqual(values, [item_dto for _ in items])
 

@@ -111,9 +111,24 @@ python -m lilly create-service --help
 - Clone the repository
 
 ```shell
-git clone git@github.com:sopherapps/lilly.git 
+git clone git@github.com:sopherapps/lilly.git && cd lilly
 ```
 
+- Create a test postgres database if you have not yet
+
+```shell
+sudo -su postgres
+createdb <test_db_name>
+exit
+```
+
+- Copy the `.example.env` file to `.env`
+
+```shell
+cp .example.env .env
+```
+
+- Update the `TEST_DATABASE_URL` to the URL of your test postgres database in the `.env` file
 - Create virtual environment for Python 3.7 and above and activate it
 
 ```shell
@@ -359,8 +374,8 @@ uvicorn main:app # for app defined in the main.py module
   - [ ] Couchbase
   - [ ] DiskCache
 - [ ] Add some out-of-the-box base repositories e.g. 
-  - [ ] SqlAlchemyRepo (RDBM e.g. PostgreSQL, MySQL etc.)
-  - [ ] RedisRepo
+    - [x] SqlAlchemyRepo (RDBM e.g. PostgreSQL, MySQL etc.)
+    - [ ] RedisRepo
   - [ ] MemcachedRepo
   - [ ] RESTAPIRepo
   - [ ] GraphQLRepo
