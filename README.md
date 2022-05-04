@@ -374,8 +374,9 @@ uvicorn main:app # for app defined in the main.py module
   - [ ] Couchbase
   - [ ] DiskCache
 - [ ] Add some out-of-the-box base repositories e.g. 
-    - [x] SqlAlchemyRepo (RDBM e.g. PostgreSQL, MySQL etc.)
-    - [ ] RedisRepo
+  - [x] SqlAlchemyRepo (RDBM e.g. PostgreSQL, MySQL etc.)
+  - [ ] SQLAlchemyRepo hangs when postgres is used (try running tests)
+  - [ ] RedisRepo
   - [ ] MemcachedRepo
   - [ ] RESTAPIRepo
   - [ ] GraphQLRepo
