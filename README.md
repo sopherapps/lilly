@@ -225,15 +225,15 @@ class UserModel(Base):
   email = Column(String)
 
 
-class NamesRepository(Repository):
-  """Repository for saving and retrieving random names"""
-  _names_db = SQLAlchemyDataSource(db_uri=settings.DATABASE_URL, declarative_meta=Base)
+class UsersRepository(Repository):
+  """Repository for saving and retrieving users"""
+  _users_db = SQLAlchemyDataSource(db_uri=settings.DATABASE_URL, declarative_meta=Base)
 
   # -- other important methods need to be overridden also. I have excluded them for brevity.
 
   @property
   def _datasource(self) -> DataSource:
-    return self._names_db
+    return self._users_db
 ```
 
 ## Design
