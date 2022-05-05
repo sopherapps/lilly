@@ -4,7 +4,7 @@ Repositories are responsible for data preparation when saving to a data source o
 a data source
 """
 from abc import abstractmethod
-from typing import Any, List, Optional
+from typing import Any, List, Optional, ContextManager
 
 from pydantic import BaseModel
 
@@ -52,9 +52,9 @@ class Repository:
         Returns:
             BaseModel: the record DTO whose ID is `record_id`
         """
-        connection = self._get_connection()
-        record = self._get_one(connection, record_id=record_id, **kwargs)
-        return self._to_output_dto(record)
+        with self._get_connection() as connection:
+            record = self._get_one(connection, record_id=record_id, **kwargs)
+            return self._to_output_dto(record)
 
     @abstractmethod
     def _get_many(self,
@@ -114,9 +114,9 @@ class Repository:
         Returns:
             list[BaseModel]: the records' DTOs
         """
-        connection = self._get_connection()
-        records = self._get_many(connection, skip=skip, limit=limit, *criterion, **filters)
-        return [self._to_output_dto(record) for record in records]
+        with self._get_connection() as connection:
+            records = self._get_many(connection, skip=skip, limit=limit, *criterion, **filters)
+            return [self._to_output_dto(record) for record in records]
 
     @abstractmethod
     def _create_one(self, datasource_connection: Any, record: Any, **kwargs) -> Any:
@@ -146,9 +146,9 @@ class Repository:
         Returns:
             BaseModel: the created record DTO
         """
-        connection = self._get_connection()
-        record = self._create_one(connection, record=record, **kwargs)
-        return self._to_output_dto(record)
+        with self._get_connection() as connection:
+            record = self._create_one(connection, record=record, **kwargs)
+            return self._to_output_dto(record)
 
     @abstractmethod
     def _create_many(self, datasource_connection: Any, records: List[Any], **kwargs) -> List[Any]:
@@ -180,9 +180,9 @@ class Repository:
         Returns:
             list[BaseModel]: the created records' DTOs
         """
-        connection = self._get_connection()
-        records = self._create_many(connection, records=records, **kwargs)
-        return [self._to_output_dto(record) for record in records]
+        with self._get_connection() as connection:
+            records = self._create_many(connection, records=records, **kwargs)
+            return [self._to_output_dto(record) for record in records]
 
     @abstractmethod
     def _update_one(self, datasource_connection: Any, record_id: Any, new_record: Any, **kwargs) -> Any:
@@ -214,9 +214,9 @@ class Repository:
         Returns:
             BaseModel: the updated record's DTO
         """
-        connection = self._get_connection()
-        record = self._update_one(connection, record_id=record_id, new_record=new_record, **kwargs)
-        return self._to_output_dto(record)
+        with self._get_connection() as connection:
+            record = self._update_one(connection, record_id=record_id, new_record=new_record, **kwargs)
+            return self._to_output_dto(record)
 
     @abstractmethod
     def _update_many(self, datasource_connection: Any, new_record: Any, *criterion, **filters) -> List[Any]:
@@ -268,9 +268,9 @@ class Repository:
         Returns:
             list[BaseModel]: the updated records' DTOs
         """
-        connection = self._get_connection()
-        records = self._update_many(connection, new_record, *criterion, **filters)
-        return [self._to_output_dto(record) for record in records]
+        with self._get_connection() as connection:
+            records = self._update_many(connection, new_record, *criterion, **filters)
+            return [self._to_output_dto(record) for record in records]
 
     @abstractmethod
     def _remove_one(self, datasource_connection: Any, record_id: Any, **kwargs) -> Any:
@@ -302,9 +302,9 @@ class Repository:
         Returns:
             Any: the removed record's DTO
         """
-        connection = self._get_connection()
-        record = self._remove_one(connection, record_id=record_id, **kwargs)
-        return self._to_output_dto(record)
+        with self._get_connection() as connection:
+            record = self._remove_one(connection, record_id=record_id, **kwargs)
+            return self._to_output_dto(record)
 
     @abstractmethod
     def _remove_many(self, datasource_connection: Any, *criterion, **filters) -> List[Any]:
@@ -354,9 +354,9 @@ class Repository:
         Returns:
             list[BaseModel]: the removed records' DTOs
         """
-        connection = self._get_connection()
-        records = self._remove_many(connection, *criterion, **filters)
-        return [self._to_output_dto(record) for record in records]
+        with self._get_connection() as connection:
+            records = self._remove_many(connection, *criterion, **filters)
+            return [self._to_output_dto(record) for record in records]
 
     @property
     @abstractmethod
@@ -369,6 +369,8 @@ class Repository:
         """Converts the given data into the appropriate data transfer object"""
         raise NotImplementedError()
 
-    def _get_connection(self) -> Any:
-        """Returns the connection to the data source"""
+    def _get_connection(self) -> ContextManager:
+        """
+        Returns the context manager to the connection to the data source by calling `DataSource.connect()`
+        """
         return self._datasource.connect()

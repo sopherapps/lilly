@@ -1,10 +1,22 @@
 """Tests for the base Repository class"""
 
 import unittest
+from typing import Any
 from unittest.mock import MagicMock, PropertyMock, patch, call
 
 from lilly.datasources import DataSource
 from lilly.repositories import Repository
+
+
+class MockConnectionContextManager:
+    def __init__(self, connection: Any):
+        self._connection = connection
+
+    def __enter__(self):
+        return self._connection
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        pass
 
 
 class TestRepository(unittest.TestCase):
@@ -14,7 +26,7 @@ class TestRepository(unittest.TestCase):
         """Initialize some common variables"""
         self.connection = "connected"
         self.mock_datasource = DataSource()
-        self.mock_datasource.connect = MagicMock(return_value=self.connection)
+        self.mock_datasource.connect = MagicMock(return_value=MockConnectionContextManager(self.connection))
 
     @patch("lilly.repositories.Repository._datasource", new_callable=PropertyMock)
     def test_get_one(self, mock_repo_datasource: PropertyMock):

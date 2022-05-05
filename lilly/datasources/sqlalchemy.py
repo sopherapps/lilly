@@ -1,10 +1,26 @@
 """DataSource from SQLAlchemy"""
-from typing import Generator
+from typing import Generator, Optional
 
 from sqlalchemy import create_engine
+from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session, sessionmaker, DeclarativeMeta
 
 from .base import DataSource
+
+
+class SQLAlchemySessionContextManager:
+    """This is a special context manager to ensure the created session is closed when used"""
+
+    def __init__(self, engine: Engine):
+        self.__engine = engine
+        self.__session: Optional[Session] = None
+
+    def __enter__(self) -> Session:
+        self.__session = sessionmaker(bind=self.__engine, autocommit=False, autoflush=False)()
+        return self.__session
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.__session.close()
 
 
 class SQLAlchemyDataSource(DataSource):
@@ -22,11 +38,12 @@ class SQLAlchemyDataSource(DataSource):
 
         self._engine = create_engine(db_uri, **options)
 
-    def connect(self) -> Session:
+    def connect(self) -> SQLAlchemySessionContextManager:
         """Connects to the database and returns a session to use for making queries"""
         if not self._is_initialized:
             self.initialize_db()
-        return next(self._sessions())
+
+        return SQLAlchemySessionContextManager(self._engine)
 
     def initialize_db(self):
         """Does any tasks to prepare the database for use"""
@@ -37,16 +54,6 @@ class SQLAlchemyDataSource(DataSource):
         """Clears the whole database, removing the associated tables"""
         self._declarative_meta.metadata.drop_all(bind=self._engine)
         self._is_initialized = False
-
-    def _sessions(self, **kwargs) -> Generator[Session, None, None]:
-        """
-        generates sessions on the fly, yielding them and closing them after use
-        """
-        db = sessionmaker(bind=self._engine, autocommit=False, autoflush=False)()
-        try:
-            yield db
-        finally:
-            db.close()
 
 
 def _is_db_sqlite(db_uri: str) -> bool:
