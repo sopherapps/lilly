@@ -30,7 +30,7 @@ class SQLAlchemyDataSource(DataSource):
     def __init__(self, declarative_meta: DeclarativeMeta, db_uri: str, **options):
         self._declarative_meta = declarative_meta
 
-        if _is_db_sqlite(db_uri=db_uri):
+        if db_uri.startswith("sqlite"):
             # remove the same_thread_check done by sqlite
             connect_args = options.get("connect_args", {})
             connect_args.update({"check_same_thread": False})
@@ -54,8 +54,3 @@ class SQLAlchemyDataSource(DataSource):
         """Clears the whole database, removing the associated tables"""
         self._declarative_meta.metadata.drop_all(bind=self._engine)
         self._is_initialized = False
-
-
-def _is_db_sqlite(db_uri: str) -> bool:
-    """Checks if the database is an sqlite one."""
-    return db_uri.split(":")[0].lower() == "sqlite"

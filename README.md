@@ -429,6 +429,10 @@ uvicorn main:app # for app defined in the main.py module
 - The idea to create **lilly** came after looking at what the [Loopback](https://loopback.io/) team did
   with [Loopback4](https://loopback.io/doc/en/lb4)
 
+## ChangeLog
+
+For the changes across versions, look at the [CHANGELOG.md](./CHANGELOG.md)
+
 ## License
 
 Copyright (c) 2022 [Martin Ahindura](https://github.com/Tinitto) Licensed under the [MIT License](./LICENSE)
