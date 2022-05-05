@@ -1,10 +1,22 @@
-"""Tests for the repository-related code"""
+"""Tests for the base Repository class"""
 
 import unittest
+from typing import Any
 from unittest.mock import MagicMock, PropertyMock, patch, call
 
 from lilly.datasources import DataSource
 from lilly.repositories import Repository
+
+
+class MockConnectionContextManager:
+    def __init__(self, connection: Any):
+        self._connection = connection
+
+    def __enter__(self):
+        return self._connection
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        pass
 
 
 class TestRepository(unittest.TestCase):
@@ -14,7 +26,7 @@ class TestRepository(unittest.TestCase):
         """Initialize some common variables"""
         self.connection = "connected"
         self.mock_datasource = DataSource()
-        self.mock_datasource.connect = MagicMock(return_value=self.connection)
+        self.mock_datasource.connect = MagicMock(return_value=MockConnectionContextManager(self.connection))
 
     @patch("lilly.repositories.Repository._datasource", new_callable=PropertyMock)
     def test_get_one(self, mock_repo_datasource: PropertyMock):
@@ -95,7 +107,7 @@ class TestRepository(unittest.TestCase):
         values = mock_repo.update_many(new_record=new_record, filters=filters, **random_kwargs)
 
         mock_repo._update_many.assert_called_with(
-            self.connection, new_record=new_record, filters=filters, **random_kwargs)
+            self.connection, new_record, filters=filters, **random_kwargs)
         mock_repo._to_output_dto.assert_has_calls([call(item) for item in items])
         self.assertListEqual(values, [item_dto for _ in items])
 

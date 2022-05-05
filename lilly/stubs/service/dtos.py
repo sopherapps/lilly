@@ -11,7 +11,7 @@ class MessageDTO(BaseModel):
 
 
 class NameRecordDTO(BaseModel):
-    id: str
+    id: int
     title: str
 
     class Config:

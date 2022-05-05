@@ -111,9 +111,24 @@ python -m lilly create-service --help
 - Clone the repository
 
 ```shell
-git clone git@github.com:sopherapps/lilly.git 
+git clone git@github.com:sopherapps/lilly.git && cd lilly
 ```
 
+- Create a test postgres database if you have not yet
+
+```shell
+sudo -su postgres
+createdb <test_db_name>
+exit
+```
+
+- Copy the `.example.env` file to `.env`
+
+```shell
+cp .example.env .env
+```
+
+- Update the `TEST_DATABASE_URL` to the URL of your test postgres database in the `.env` file
 - Create virtual environment for Python 3.7 and above and activate it
 
 ```shell
@@ -130,7 +145,7 @@ pip install -r requirements.txt
 - Run the test command
 
 ```shell
-python -m unittest  discover -s test
+python -m unittest
 ```
 
 ## Usage
@@ -188,13 +203,24 @@ already existing code.
 To create a new data source, one needs to subclass the `DataSource` class and override the `connect(self)` method.
 
 ```python
-from typing import Any
+from typing import ContextManager
 from lilly.datasources import DataSource
 
 
+class SampleConnectionContextManager:
+  def __init__(self, connection):
+    self.connection = connection
+
+  def __enter__(self):
+    return self.connection
+
+  def __exit__(self, exc_type, exc_val, exc_tb):
+    self.connection.close()
+
+
 class SampleDataSource(DataSource):
-  def connect(self) -> Any:
-    # do some stuff and return a connection
+  def connect(self) -> ContextManager:
+    # do some stuff and return a context manager for a connection
     pass
 ```
 
@@ -225,15 +251,15 @@ class UserModel(Base):
   email = Column(String)
 
 
-class NamesRepository(Repository):
-  """Repository for saving and retrieving random names"""
-  _names_db = SQLAlchemyDataSource(db_uri=settings.DATABASE_URL, declarative_meta=Base)
+class UsersRepository(Repository):
+  """Repository for saving and retrieving users"""
+  _users_db = SQLAlchemyDataSource(db_uri=settings.DATABASE_URL, declarative_meta=Base)
 
   # -- other important methods need to be overridden also. I have excluded them for brevity.
 
   @property
   def _datasource(self) -> DataSource:
-    return self._names_db
+    return self._users_db
 ```
 
 ## Design
@@ -337,6 +363,10 @@ uvicorn main:app # for app defined in the main.py module
   the router common to all routes
 - All the routes in the app have one router so their endpoints need to be different and explicit since no mounting will
   be allowed
+- The `connect()` method of the `DataSource` class should return a `ContextManager` wrapped around the connection itself
+  so as to allow for any clean up tasks to be done in the `__exit__()` method of that ContextManager after each
+  connection is ready to be dropped. The `__enter__` method of the ContextManager needs to return the actual connection
+  object.
 
 ## ToDo
 
@@ -359,7 +389,8 @@ uvicorn main:app # for app defined in the main.py module
   - [ ] Couchbase
   - [ ] DiskCache
 - [ ] Add some out-of-the-box base repositories e.g. 
-  - [ ] SqlAlchemyRepo (RDBM e.g. PostgreSQL, MySQL etc.)
+  - [x] SqlAlchemyRepo (RDBM e.g. PostgreSQL, MySQL etc.)
+  - [x] SQLAlchemyRepo hangs when postgres is used (try running tests)
   - [ ] RedisRepo
   - [ ] MemcachedRepo
   - [ ] RESTAPIRepo
@@ -397,6 +428,10 @@ uvicorn main:app # for app defined in the main.py module
 
 - The idea to create **lilly** came after looking at what the [Loopback](https://loopback.io/) team did
   with [Loopback4](https://loopback.io/doc/en/lb4)
+
+## ChangeLog
+
+For the changes across versions, look at the [CHANGELOG.md](./CHANGELOG.md)
 
 ## License
 
