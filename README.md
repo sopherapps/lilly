@@ -262,6 +262,87 @@ class UsersRepository(Repository):
     return self._users_db
 ```
 
+### Repositories
+
+To create a new repository, one needs to subclass the `Repository` class and override all the following methods:
+
+- `_get_one(self, datasource_connection: Any, record_id: Any, **kwargs) -> Any` method to get one record of
+    id `record_id`
+- `_get_many(self, datasource_connection: Any, skip: int, limit: int, filters: Dict[Any, Any], **kwargs) -> List[Any]`
+    method to get many records that fulfil the `filters`
+- `_create_one(self, datasource_connection: Any, record: Any, **kwargs) -> Any` method to create one record
+- `_create_many(self, datasource_connection: Any, record: List[Any], **kwargs) -> List[Any]` method to create many
+    records
+- `_update_one(self, datasource_connection: Any, record_id: Any, new_record: Any, **kwargs) -> Any` method to update
+    one record of id `record_id`
+- `_update_many(self, datasource_connection: Any, new_record: Any, filters: Dict[Any, Any], **kwargs) -> Any` method
+    to update many records that fulfil the `filters`
+- `_remove_one(self, datasource_connection: Any, record_id: Any, **kwargs) -> Any` method to remove one record of
+    id `record_id`
+- `_remove_many(self, datasource_connection: Any, filters: Dict[Any, Any], **kwargs) -> Any` method to remove many
+    records that fulfil the `filters`
+- `_datasource(self) -> DataSource` an @property-decorated method to return the DataSource whose `connect()` method is
+    to be called in any of the other methods to get its instance.
+- `_to_output_dto(self, record: Any) -> BaseModel` method which converts any record from the data source raw to DTO
+    for the public methods
+
+A good example is how we implemented the `SQLAlchemyRepository`. Feel free to look at it.
+
+To make life easier for the developer, we have created a few off-the-shelf `Repository` subclasses with most of those methods implemented.
+They just need to be inherited and a few abstract methods filled with one-liners (or slightly more than one-liners if you wish).
+
+These include:
+
+#### 1. SQLAlchemyRepository
+
+This connects to any relational database e.g. MySQL, PostgreSQL, Sqlite etc. using [SQLAlchemy](https://www.sqlalchemy.org/)
+via the `SQLAlchemyDataSource` data source class.
+
+Here is a sample of its usage:
+
+```python
+from typing import Type
+
+from pydantic import BaseModel
+from sqlalchemy import Column, Integer, String
+from sqlalchemy.orm import DeclarativeMeta, declarative_base
+
+
+from lilly.repositories import SQLAlchemyRepository
+from lilly.datasources import SQLAlchemyDataSource
+from lilly.conf import settings
+
+from .dtos import NameRecordDTO # a subclass of pydantic.BaseModel that is a Data Transfer Object for Name types
+
+Base = declarative_base()
+
+
+class Name(Base):
+    __tablename__ = "names"
+    id = Column(Integer, primary_key=True)
+    title = Column(String, nullable=False)
+
+
+class NamesRepository(SQLAlchemyRepository):
+    """Repository for saving and retrieving random names"""
+    _names_db = SQLAlchemyDataSource(declarative_meta=Base, db_uri=settings.DATABASE_URL)
+
+    @property
+    def _model_cls(self) -> Type[DeclarativeMeta]:
+        return Name
+
+    @property
+    def _dto_cls(self) -> Type[BaseModel]:
+        return NameRecordDTO
+
+    @property
+    def _datasource(self) -> SQLAlchemyDataSource:
+        return self._names_db
+        
+ # The NamesRepository can then be instantiated in the `Actions` subclasses
+
+```
+
 ## Design
 
 ### Requirements
