@@ -1,7 +1,7 @@
 """
 Module containing repositories that the Actions use to persist data or to retrieve it
 """
-from typing import Dict, Any, List, Type
+from typing import Type
 
 from pydantic import BaseModel
 from sqlalchemy import Column, Integer, String

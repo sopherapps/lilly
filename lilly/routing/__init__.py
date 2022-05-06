@@ -3,7 +3,6 @@ Package containing base class for all route sets and any utilities connected to 
 Route sets are collections of related routes that expose the app to its clients.
 We use Class Based Views in order to be cleaner and to use the private _do() method to call an action
 """
-from abc import abstractmethod
 from typing import Type
 
 from lilly.actions import Action

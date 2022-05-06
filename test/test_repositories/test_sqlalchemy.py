@@ -7,10 +7,11 @@ from unittest.mock import MagicMock, PropertyMock, patch
 from pydantic import BaseModel
 from dotenv import load_dotenv
 from sqlalchemy import Column, Integer, String, Table
-from sqlalchemy.orm import declarative_base, DeclarativeMeta, Session
+from sqlalchemy.orm import declarative_base, DeclarativeMeta
 
 from lilly.datasources import SQLAlchemyDataSource
 from lilly.repositories import SQLAlchemyRepository
+from test.assets.mock_internals import NameTestDTO, MOCK_NAME_RECORDS, NameTestCreationDTO
 
 root_path = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
 test_env_path = os.path.join(root_path, ".env")
@@ -20,14 +21,6 @@ Base = declarative_base()
 
 sqlite_test_db = SQLAlchemyDataSource(declarative_meta=Base, db_uri="sqlite://")
 pq_test_db = SQLAlchemyDataSource(declarative_meta=Base, db_uri=os.environ.get("TEST_DATABASE_URL"))
-
-
-class NameTestDTO(BaseModel):
-    id: int
-    title: str
-
-    class Config:
-        orm_mode = True
 
 
 class NameTest(Base):
@@ -143,17 +136,9 @@ class TestSQLAlchemyRepository(unittest.TestCase):
 
     def _test_get_one(self, repo: NamesTestRepository):
         """get_one returns a single record of given id from the database"""
-        random_records: List[Dict[str, Any]] = [
-            {"title": "John Doe"},
-            {"title": "Jane Doe"},
-            {"title": "Paul Doe"},
-            {"title": "Richard Roe"},
-            {"title": "Rose Doe"},
-            {"title": "Joy Doe"},
-        ]
-        self._add_dummy_data(repo.db_source, random_records)
+        self._add_dummy_data(repo.db_source, MOCK_NAME_RECORDS)
 
-        for index, record in enumerate(random_records):
+        for index, record in enumerate(MOCK_NAME_RECORDS):
             record_id = index + 1
 
             expected = NameTestDTO(id=record_id, **record)
@@ -162,39 +147,18 @@ class TestSQLAlchemyRepository(unittest.TestCase):
 
     def _test_get_many(self, repo: NamesTestRepository):
         """get_many returns a list of records that fulfill given criteria and filters"""
-        random_records: List[Dict[str, Any]] = [
-            {"title": "Doe"},
-            {"title": "Roe"},
-            {"title": "Doe"},
-            {"title": "Roe"},
-            {"title": "Doe"},
-            {"title": "Doe"},
-            {"title": "Roe"},
-            {"title": "Roe"},
-            {"title": "Doe"},
-            {"title": "Roe"},
-        ]
-
-        self._add_dummy_data(repo.db_source, random_records)
+        self._add_dummy_data(repo.db_source, MOCK_NAME_RECORDS)
 
         expected = [
             NameTestDTO(id=7, title="Roe"),
             NameTestDTO(id=8, title="Roe"),
         ]
-        got = repo.get_many(NameTest.id < 10, NameTest.id > 2, skip=1, limit=2, title="Roe")
+        got = repo.get_many(NameTest.id < 10, "id > 2", skip=1, limit=2, title="Roe")
         self.assertListEqual(expected, got)
 
     def _test_update_one(self, repo: NamesTestRepository):
         """update_one updates the record of record_id passed"""
-        random_records: List[Dict[str, Any]] = [
-            {"title": "John Doe"},
-            {"title": "Jane Doe"},
-            {"title": "Paul Doe"},
-            {"title": "Richard Roe"},
-            {"title": "Rose Doe"},
-            {"title": "Joy Doe"},
-        ]
-        self._add_dummy_data(repo.db_source, random_records)
+        self._add_dummy_data(repo.db_source, MOCK_NAME_RECORDS)
         test_data: List[NameTestDTO] = [
             NameTestDTO(id=2, title="Foo bar"),
             NameTestDTO(id=5, title="Pao al"),
@@ -202,7 +166,7 @@ class TestSQLAlchemyRepository(unittest.TestCase):
         ]
         with repo.db_source.connect() as session:
             for expected in test_data:
-                got_after_update = repo.update_one(expected.id, expected.dict())
+                got_after_update = repo.update_one(expected.id, expected)
                 got_after_get = session.query(NameTest).get(expected.id)
 
                 self.assertEqual(expected, got_after_update)
@@ -210,41 +174,28 @@ class TestSQLAlchemyRepository(unittest.TestCase):
 
     def _test_update_many(self, repo: NamesTestRepository):
         """update_many updates many records that fulfill the criteria and filters"""
-        random_records: List[Dict[str, Any]] = [
-            {"title": "Doe"},
-            {"title": "Roe"},
-            {"title": "Doe"},
-            {"title": "Roe"},
-            {"title": "Doe"},
-            {"title": "Doe"},
-            {"title": "Roe"},
-            {"title": "Roe"},
-            {"title": "Doe"},
-            {"title": "Roe"},
+        expected_after_update = [
+            NameTestDTO(id=4, title="Rene"),
+            NameTestDTO(id=7, title="Rene"),
+            NameTestDTO(id=8, title="Rene"),
         ]
+        expected_after_get = [
+            NameTestDTO(id=1, title="Doe"),
+            NameTestDTO(id=2, title="Roe"),
+            NameTestDTO(id=3, title="Doe"),
+            NameTestDTO(id=4, title="Rene"),
+            NameTestDTO(id=5, title="Doe"),
+            NameTestDTO(id=6, title="Doe"),
+            NameTestDTO(id=7, title="Rene"),
+            NameTestDTO(id=8, title="Rene"),
+            NameTestDTO(id=9, title="Doe"),
+            NameTestDTO(id=10, title="Roe"),
+        ]
+        new_data = NameTestCreationDTO(title="Rene")
 
         with repo.db_source.connect() as session:
-            self._add_dummy_data(repo.db_source, random_records)
-
-            expected_after_update = [
-                NameTestDTO(id=4, title="Rene"),
-                NameTestDTO(id=7, title="Rene"),
-                NameTestDTO(id=8, title="Rene"),
-            ]
-            expected_after_get = [
-                NameTestDTO(id=1, title="Doe"),
-                NameTestDTO(id=2, title="Roe"),
-                NameTestDTO(id=3, title="Doe"),
-                NameTestDTO(id=4, title="Rene"),
-                NameTestDTO(id=5, title="Doe"),
-                NameTestDTO(id=6, title="Doe"),
-                NameTestDTO(id=7, title="Rene"),
-                NameTestDTO(id=8, title="Rene"),
-                NameTestDTO(id=9, title="Doe"),
-                NameTestDTO(id=10, title="Roe"),
-            ]
-
-            got_after_update = repo.update_many({"title": "Rene"}, NameTest.id < 10, NameTest.id > 2, title="Roe")
+            self._add_dummy_data(repo.db_source, MOCK_NAME_RECORDS)
+            got_after_update = repo.update_many(new_data, NameTest.id < 10, "id > 2", title="Roe")
             got_after_get = [NameTestDTO.from_orm(record) for record in
                              session.query(NameTest).order_by(NameTest.id).all()]
 
@@ -253,19 +204,10 @@ class TestSQLAlchemyRepository(unittest.TestCase):
 
     def _test_remove_one(self, repo: NamesTestRepository):
         """remove_one removes the record with the given record_id"""
-        records: List[Dict[str, Any]] = [
-            {"title": "John Doe"},
-            {"title": "Jane Doe"},
-            {"title": "Paul Doe"},
-            {"title": "Richard Roe"},
-            {"title": "Rose Doe"},
-            {"title": "Joy Doe"},
-        ]
-
         with repo.db_source.connect() as session:
-            self._add_dummy_data(repo.db_source, records)
+            self._add_dummy_data(repo.db_source, MOCK_NAME_RECORDS)
 
-            for index, record in enumerate(records):
+            for index, record in enumerate(MOCK_NAME_RECORDS):
                 record_id = index + 1
 
                 expected = NameTestDTO(id=record_id, **record)
@@ -277,20 +219,8 @@ class TestSQLAlchemyRepository(unittest.TestCase):
 
     def _test_remove_many(self, repo: NamesTestRepository):
         """remove_many removes the records that fulfill the given criteria and filters"""
-        records: List[Dict[str, Any]] = [
-            {"title": "Doe"},
-            {"title": "Roe"},
-            {"title": "Doe"},
-            {"title": "Roe"},
-            {"title": "Doe"},
-            {"title": "Doe"},
-            {"title": "Roe"},
-            {"title": "Roe"},
-            {"title": "Doe"},
-            {"title": "Roe"},
-        ]
         with repo.db_source.connect() as session:
-            self._add_dummy_data(repo.db_source, records)
+            self._add_dummy_data(repo.db_source, MOCK_NAME_RECORDS)
 
             expected_after_update = [
                 NameTestDTO(id=4, title="Roe"),
@@ -307,7 +237,7 @@ class TestSQLAlchemyRepository(unittest.TestCase):
                 NameTestDTO(id=10, title="Roe"),
             ]
 
-            got_after_delete = repo.remove_many(NameTest.id < 10, NameTest.id > 2, title="Roe")
+            got_after_delete = repo.remove_many(NameTest.id < 10, "id > 2", title="Roe")
             got_after_get = [NameTestDTO.from_orm(record) for record in
                              session.query(NameTest).order_by(NameTest.id).all()]
 
@@ -316,52 +246,31 @@ class TestSQLAlchemyRepository(unittest.TestCase):
 
     def _test_create_one(self, repo: NamesTestRepository):
         """get_one creates ibe record in the database"""
-        random_records: List[Dict[str, Any]] = [
-            {"title": "John Doe"},
-            {"title": "Jane Doe"},
-            {"title": "Paul Doe"},
-            {"title": "Richard Roe"},
-            {"title": "Rose Doe"},
-            {"title": "Joy Doe"},
-        ]
-
-        for index, record in enumerate(random_records):
+        for index, record in enumerate(MOCK_NAME_RECORDS):
             record_id = index + 1
 
             expected = NameTestDTO(id=record_id, **record)
-            got = repo.create_one(record)
+            got = repo.create_one(NameTestCreationDTO(**record))
             self.assertEqual(expected, got)
 
     def _test_create_many(self, repo: NamesTestRepository):
         """create_many creates many records in the database"""
-        random_records: List[Dict[str, Any]] = [
-            {"title": "Doe"},
-            {"title": "Roe"},
-            {"title": "Doe"},
-            {"title": "Roe"},
-            {"title": "Doe"},
-            {"title": "Doe"},
-            {"title": "Roe"},
-            {"title": "Roe"},
-            {"title": "Doe"},
-            {"title": "Roe"},
+        records = [NameTestCreationDTO(**record) for record in MOCK_NAME_RECORDS]
+        expected = [
+            NameTestDTO(id=1, title="Doe"),
+            NameTestDTO(id=2, title="Roe"),
+            NameTestDTO(id=3, title="Doe"),
+            NameTestDTO(id=4, title="Roe"),
+            NameTestDTO(id=5, title="Doe"),
+            NameTestDTO(id=6, title="Doe"),
+            NameTestDTO(id=7, title="Roe"),
+            NameTestDTO(id=8, title="Roe"),
+            NameTestDTO(id=9, title="Doe"),
+            NameTestDTO(id=10, title="Roe"),
         ]
 
         with repo.db_source.connect() as session:
-            expected = [
-                NameTestDTO(id=1, title="Doe"),
-                NameTestDTO(id=2, title="Roe"),
-                NameTestDTO(id=3, title="Doe"),
-                NameTestDTO(id=4, title="Roe"),
-                NameTestDTO(id=5, title="Doe"),
-                NameTestDTO(id=6, title="Doe"),
-                NameTestDTO(id=7, title="Roe"),
-                NameTestDTO(id=8, title="Roe"),
-                NameTestDTO(id=9, title="Doe"),
-                NameTestDTO(id=10, title="Roe"),
-            ]
-
-            got_after_create = repo.create_many(records=random_records)
+            got_after_create = repo.create_many(records=records)
             got_after_get = [NameTestDTO.from_orm(record) for record in
                              session.query(NameTest).order_by(NameTest.id).all()]
 

@@ -267,20 +267,20 @@ class UsersRepository(Repository):
 To create a new repository, one needs to subclass the `Repository` class and override all the following methods:
 
 - `_get_one(self, datasource_connection: Any, record_id: Any, **kwargs) -> Any` method to get one record of
-    id `record_id`
+  id `record_id`
 - `_get_many(self, datasource_connection: Any, skip: int, limit: int, filters: Dict[Any, Any], **kwargs) -> List[Any]`
-    method to get many records that fulfil the `filters`
-- `_create_one(self, datasource_connection: Any, record: Any, **kwargs) -> Any` method to create one record
-- `_create_many(self, datasource_connection: Any, record: List[Any], **kwargs) -> List[Any]` method to create many
-    records
-- `_update_one(self, datasource_connection: Any, record_id: Any, new_record: Any, **kwargs) -> Any` method to update
-    one record of id `record_id`
-- `_update_many(self, datasource_connection: Any, new_record: Any, filters: Dict[Any, Any], **kwargs) -> Any` method
-    to update many records that fulfil the `filters`
+  method to get many records that fulfil the `filters`
+- `_create_one(self, datasource_connection: Any, record: BaseModel, **kwargs) -> Any` method to create one record
+- `_create_many(self, datasource_connection: Any, record: List[BaseModel], **kwargs) -> List[Any]` method to create many
+  records
+- `_update_one(self, datasource_connection: Any, record_id: Any, new_record: BaseModel, **kwargs) -> Any` method to
+  update one record of id `record_id`
+- `_update_many(self, datasource_connection: Any, new_record: BaseModel, filters: Dict[Any, Any], **kwargs) -> Any`
+  method to update many records that fulfil the `filters`
 - `_remove_one(self, datasource_connection: Any, record_id: Any, **kwargs) -> Any` method to remove one record of
-    id `record_id`
+  id `record_id`
 - `_remove_many(self, datasource_connection: Any, filters: Dict[Any, Any], **kwargs) -> Any` method to remove many
-    records that fulfil the `filters`
+  records that fulfil the `filters`
 - `_datasource(self) -> DataSource` an @property-decorated method to return the DataSource whose `connect()` method is
     to be called in any of the other methods to get its instance.
 - `_to_output_dto(self, record: Any) -> BaseModel` method which converts any record from the data source raw to DTO
@@ -333,14 +333,227 @@ class NamesRepository(SQLAlchemyRepository):
 
     @property
     def _dto_cls(self) -> Type[BaseModel]:
-        return NameRecordDTO
+      return NameRecordDTO
 
     @property
     def _datasource(self) -> SQLAlchemyDataSource:
-        return self._names_db
-        
- # The NamesRepository can then be instantiated in the `Actions` subclasses
+      return self._names_db
 
+# The NamesRepository can then be instantiated in the `Actions` subclasses
+
+```
+
+### Actions
+
+To create a new action, one needs to subclass the `Action` class and override the `run()` method.
+
+For instance:
+
+```python
+import random
+import string
+
+from pydantic import BaseModel
+
+from lilly.actions import Action
+
+from .repositories import NamesRepository  # A Repository for names
+from .dto import NameCreationRequestDTO # The Data Transfer Object to used when creating a name
+
+
+class GenerateRandomName(Action):
+  """
+  Generates a random string and persists it in the data source
+  """
+  _vowels = "aeiou"
+  _consonants = "".join(set(string.ascii_lowercase) - set("aeiou"))
+  _name_repository = NamesRepository()
+
+  def __init__(self, length: int = 7):
+    self._length = length
+
+  def run(self) -> BaseModel:
+    """Actual method that is run"""
+    name = self._generate_random_word()
+    return self._name_repository.create_one(NameCreationRequestDTO(title=name))
+
+  def _generate_random_word(self):
+    """Generates a random word"""
+    word = ""
+    for i in range(self._length):
+      if i % 2 == 0:
+        word += random.choice(self._consonants)
+      else:
+        word += random.choice(self._vowels)
+    return word
+
+# The GenerateRandomName action is then used in a route as self._do(GenerateRandomName, length=9)
+```
+
+To make life easier for the developer, we have developed a few Actions that can be inherited and used easily. They
+include:
+
+#### 1. CreateOneAction
+
+This is a CRUD action that creates a single item in the repository. Here is a sample of how it is used.
+
+```python
+from lilly.actions import CreateOneAction
+from lilly.repositories import Repository
+
+
+# inherit the CreateOneAction and implement its _repository @property method
+class CreateOneName(CreateOneAction):
+  """Create a single Name record in the repository"""
+
+  @property
+  def _repository(self) -> Repository:
+    return  # your repository
+
+# then use it in your routes like self._do(CreateOneName, data_dto)
+```
+
+#### 2. CreateManyAction
+
+This is a CRUD action that creates multiple items in the repository at one go. Here is a sample of how it is used.
+
+```python
+from lilly.actions import CreateManyAction
+from lilly.repositories import Repository
+
+
+# inherit the CreateManyAction and implement its _repository @property method
+class CreateManyNames(CreateManyAction):
+  @property
+  def _repository(self) -> Repository:
+    return  # your repository
+
+# then use it in your routes like self._do(CreateManyNames, data_dtos)
+```
+
+#### 3. ReadOneAction
+
+This is a CRUD action that reads a single item from the repository. Here is a sample of how it is used.
+
+```python
+from lilly.actions import ReadOneAction
+from lilly.repositories import Repository
+
+
+# inherit the ReadOneAction and implement its _repository @property method
+class ReadOneName(ReadOneAction):
+  @property
+  def _repository(self) -> Repository:
+    return  # your repository
+
+# then use it in your routes like self._do(ReadOneName, record_id)
+```
+
+#### 4. ReadManyAction
+
+This is a CRUD action that reads multiple items in the repository at one go basing on a number of filters and pagination
+controls. Here is a sample of how it is used.
+
+```python
+from lilly.actions import ReadManyAction
+from lilly.repositories import Repository
+
+
+# inherit the ReadManyAction and implement its _repository @property method
+class ReadManyNames(ReadManyAction):
+  @property
+  def _repository(self) -> Repository:
+    return  # your repository
+
+# then use it in your routes like self._do(ReadManyNames, "id > 8 AND title LIKE "%doe", skip=1, limit=10, address="Kampala")
+# To read all names that:
+#  - have an id greater than 8
+#  - and title ending with 'doe'
+#  - as well having the address for that name equal to "Kampala"
+#  - but skipping the first item in that collection
+#  - and returning not more than ten records
+```
+
+#### 5. UpdateOneAction
+
+This is a CRUD action that updates a single item in the repository. Here is a sample of how it is used.
+
+```python
+from lilly.actions import UpdateOneAction
+from lilly.repositories import Repository
+
+
+# inherit the UpdateOneAction and implement its _repository @property method
+class UpdateOneName(UpdateOneAction):
+  @property
+  def _repository(self) -> Repository:
+    return  # your repository
+
+# then use it in your routes like self._do(UpdateOneName, record_id, new_data_dto)
+```
+
+#### 6. UpdateManyAction
+
+This is a CRUD action that updates multiple items in the repository at one go basing on a number of filters supplied.
+Here is a sample of how it is used.
+
+```python
+from lilly.actions import UpdateManyAction
+from lilly.repositories import Repository
+
+
+# inherit the UpdateManyAction and implement its _repository @property method
+class UpdateManyNames(UpdateManyAction):
+  @property
+  def _repository(self) -> Repository:
+    return  # your repository
+
+# then use it in your routes like self._do(UpdateManyNames, new_data_dto, "id > 8 AND title LIKE "%doe", address="Kampala")
+# To update all names to resemble new_data_dto for all names that:
+#  - have an id greater than 8
+#  - and title ending with 'doe'
+#  - as well having the address for that name equal to "Kampala"
+```
+
+#### 7. DeleteOneAction
+
+This is a CRUD action that deletes a single item in the repository. Here is a sample of how it is used.
+
+```python
+from lilly.actions import DeleteOneAction
+from lilly.repositories import Repository
+
+
+# inherit the DeleteOneAction and implement its _repository @property method
+class DeleteOneName(DeleteOneAction):
+  @property
+  def _repository(self) -> Repository:
+    return  # your repository
+
+# then use it in your routes like self._do(DeleteOneName, record_id)
+```
+
+#### 6. UpdateManyAction
+
+This is a CRUD action that deletes multiple items in the repository at one go basing on a number of filters supplied.
+Here is a sample of how it is used.
+
+```python
+from lilly.actions import DeleteManyAction
+from lilly.repositories import Repository
+
+
+# inherit the DeleteManyAction and implement its _repository @property method
+class DeleteManyNames(DeleteManyAction):
+  @property
+  def _repository(self) -> Repository:
+    return  # your repository
+
+# then use it in your routes like self._do(DeleteManyNames, "id > 8 AND title LIKE "%doe", address="Kampala")
+# To delete all names that:
+#  - have an id greater than 8
+#  - and title ending with 'doe'
+#  - as well having the address for that name equal to "Kampala"
 ```
 
 ## Design
@@ -379,11 +592,11 @@ The following features are required.
   - `get_one(self, record_id: Any, **kwargs) -> Any` method to get one record of id `record_id`
   - `get_many(self, skip: int, limit: int, filters: Dict[Any, Any], **kwargs) -> List[Any]` method to get many records
     that fulfil the `filters`
-  - `create_one(self, record: Any, **kwargs) -> Any` method to create one record
-  - `create_many(self, record: List[Any], **kwargs) -> List[Any]` method to create many records
+  - `create_one(self, record: BaseModel, **kwargs) -> Any` method to create one record
+  - `create_many(self, records: List[BaseModel], **kwargs) -> List[Any]` method to create many records
   - `update_one(self, record_id: Any, new_record: Any, **kwargs) -> Any` method to update one record of id `record_id`
-  - `update_many(self, new_record: Any, filters: Dict[Any, Any], **kwargs) -> Any` method to update many records that
-    fulfil the `filters`
+  - `update_many(self, new_record: BaseModel, filters: Dict[Any, Any], **kwargs) -> Any` method to update many records
+    that fulfil the `filters`
   - `remove_one(self, record_id: Any, **kwargs) -> Any` method to remove one record of id `record_id`
   - `remove_many(self, filters: Dict[Any, Any], **kwargs) -> Any` method to remove many records that fulfil
     the `filters`
@@ -392,13 +605,13 @@ The following features are required.
     id `record_id`
   - `_get_many(self, datasource_connection: Any, skip: int, limit: int, filters: Dict[Any, Any], **kwargs) -> List[Any]`
     method to get many records that fulfil the `filters`
-  - `_create_one(self, datasource_connection: Any, record: Any, **kwargs) -> Any` method to create one record
-  - `_create_many(self, datasource_connection: Any, record: List[Any], **kwargs) -> List[Any]` method to create many
-    records
-  - `_update_one(self, datasource_connection: Any, record_id: Any, new_record: Any, **kwargs) -> Any` method to update
-    one record of id `record_id`
-  - `_update_many(self, datasource_connection: Any, new_record: Any, filters: Dict[Any, Any], **kwargs) -> Any` method
-    to update many records that fulfil the `filters`
+  - `_create_one(self, datasource_connection: Any, record: BaseModel, **kwargs) -> Any` method to create one record
+  - `_create_many(self, datasource_connection: Any, record: List[BaseModel], **kwargs) -> List[Any]` method to create
+    many records
+  - `_update_one(self, datasource_connection: Any, record_id: Any, new_record: BaseModel, **kwargs) -> Any` method to
+    update one record of id `record_id`
+  - `_update_many(self, datasource_connection: Any, new_record: BaseModel, filters: Dict[Any, Any], **kwargs) -> Any`
+    method to update many records that fulfil the `filters`
   - `_remove_one(self, datasource_connection: Any, record_id: Any, **kwargs) -> Any` method to remove one record of
     id `record_id`
   - `_remove_many(self, datasource_connection: Any, filters: Dict[Any, Any], **kwargs) -> Any` method to remove many
@@ -469,29 +682,29 @@ uvicorn main:app # for app defined in the main.py module
   - [ ] Mongodb
   - [ ] Couchbase
   - [ ] DiskCache
-- [ ] Add some out-of-the-box base repositories e.g. 
-  - [x] SqlAlchemyRepo (RDBM e.g. PostgreSQL, MySQL etc.)
-  - [x] SQLAlchemyRepo hangs when postgres is used (try running tests)
-  - [ ] RedisRepo
-  - [ ] MemcachedRepo
-  - [ ] RESTAPIRepo
-  - [ ] GraphQLRepo
-  - [ ] RabbitMQRepo
-  - [ ] ActiveMQRepo
-  - [ ] WebsocketsRepo
-  - [ ] KafkaRepo
-  - [ ] MongodbRepo
-  - [ ] CouchbaseRepo
-  - [ ] DiskCacheRepo
-- [ ] Add some out-of-the-box base actions e.g.
-  - [ ] CreateOneAction
-  - [ ] CreateManyAction
-  - [ ] UpdateOneAction
-  - [ ] UpdateManyAction
-  - [ ] ReadOneAction
-  - [ ] ReadManyAction
-  - [ ] DeleteOneAction
-  - [ ] DeleteManyAction
+- [ ] Add some out-of-the-box base repositories e.g.
+  - [x] SqlAlchemyRepository (RDBM e.g. PostgreSQL, MySQL etc.)
+  - [x] SQLAlchemyRepository hangs when postgres is used (try running tests)
+  - [ ] RedisRepository
+  - [ ] MemcachedRepository
+  - [ ] RESTAPIRepository
+  - [ ] GraphQLRepository
+  - [ ] RabbitMQRepository
+  - [ ] ActiveMQRepository
+  - [ ] WebsocketsRepository
+  - [ ] KafkaRepository
+  - [ ] MongodbRepository
+  - [ ] CouchbaseRepository
+  - [ ] DiskCacheRepository
+- [x] Add some out-of-the-box base actions e.g.
+  - [x] CreateOneAction
+  - [x] CreateManyAction
+  - [x] UpdateOneAction
+  - [x] UpdateManyAction
+  - [x] ReadOneAction
+  - [x] ReadManyAction
+  - [x] DeleteOneAction
+  - [x] DeleteManyAction
 - [ ] Add some out-of-the-box base route sets
   - [ ] CRUDRouteSet
   - [ ] WebsocketRouteSet

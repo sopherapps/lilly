@@ -2,12 +2,16 @@
 from pydantic import BaseModel
 
 
-class NameCreationRequestDTO(BaseModel):
+class RandomNameCreationRequestDTO(BaseModel):
     length: int
 
 
 class MessageDTO(BaseModel):
     message: str
+
+
+class NameCreationRequestDTO(BaseModel):
+    title: str
 
 
 class NameRecordDTO(BaseModel):
