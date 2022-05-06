@@ -6,7 +6,7 @@ from typing import Any, Type, Dict, List, Optional
 
 from pydantic import BaseModel
 from sqlalchemy.orm import DeclarativeMeta, Session
-from sqlalchemy import insert, select, update, delete
+from sqlalchemy import insert, select, update, delete, text
 
 from .base import Repository
 from lilly.datasources import SQLAlchemyDataSource
@@ -61,7 +61,9 @@ class SQLAlchemyRepository(Repository):
                   skip: int = 0,
                   limit: Optional[int] = None,
                   **filters) -> List[DeclarativeMeta]:
-        query = datasource_connection.query(self._model_cls).filter(*criterion).filter_by(**filters).offset(skip)
+        coerced_criteria = self.__coerce_string_criteria(*criterion)
+
+        query = datasource_connection.query(self._model_cls).filter(*coerced_criteria).filter_by(**filters).offset(skip)
 
         if limit is not None:
             query = query.limit(limit)
@@ -101,10 +103,13 @@ class SQLAlchemyRepository(Repository):
 
     def _update_many(self, datasource_connection: Session, new_record: Dict[str, Any], *criterion, **filters) -> List[
         DeclarativeMeta]:
-        stmt = update(self._model_cls).filter(*criterion).filter_by(**filters).values(new_record)
+        coerced_criteria = self.__coerce_string_criteria(*criterion)
+
+        stmt = update(self._model_cls).filter(*coerced_criteria).filter_by(**filters).values(new_record) \
+            .execution_options(synchronize_session="fetch")
 
         affected_records = self._get_affected_records(
-            datasource_connection, *criterion, new_data=new_record, **filters)
+            datasource_connection, *coerced_criteria, new_data=new_record, **filters)
 
         datasource_connection.execute(stmt)
         datasource_connection.commit()
@@ -120,9 +125,12 @@ class SQLAlchemyRepository(Repository):
         return record
 
     def _remove_many(self, datasource_connection: Session, *criterion, **filters) -> List[DeclarativeMeta]:
-        stmt = delete(self._model_cls).filter(*criterion).filter_by(**filters)
+        coerced_criteria = self.__coerce_string_criteria(*criterion)
+
+        stmt = delete(self._model_cls).filter(*coerced_criteria).filter_by(**filters) \
+            .execution_options(synchronize_session="fetch")
         affected_records = self._get_affected_records(
-            datasource_connection, *criterion, **filters)
+            datasource_connection, *coerced_criteria, **filters)
 
         datasource_connection.execute(stmt)
         datasource_connection.commit()
@@ -146,6 +154,16 @@ class SQLAlchemyRepository(Repository):
             return [_update_orm_instance(record, new_data=new_data) for record in affected_records]
 
         return affected_records
+
+    @staticmethod
+    def __coerce_string_criteria(*criteria):
+        """
+        Wraps any string criteria for filtering in a text()
+
+        e.g.::
+         "title LIKE '%t'" becomes text("title LIKE '%t'")
+        """
+        return [text(criterion) if isinstance(criterion, str) else criterion for criterion in criteria]
 
 
 def _update_orm_instance(orm_instance: DeclarativeMeta, new_data: Dict[str, Any]):

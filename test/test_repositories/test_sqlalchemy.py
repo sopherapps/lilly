@@ -153,7 +153,7 @@ class TestSQLAlchemyRepository(unittest.TestCase):
             NameTestDTO(id=7, title="Roe"),
             NameTestDTO(id=8, title="Roe"),
         ]
-        got = repo.get_many(NameTest.id < 10, NameTest.id > 2, skip=1, limit=2, title="Roe")
+        got = repo.get_many(NameTest.id < 10, "id > 2", skip=1, limit=2, title="Roe")
         self.assertListEqual(expected, got)
 
     def _test_update_one(self, repo: NamesTestRepository):
@@ -195,7 +195,7 @@ class TestSQLAlchemyRepository(unittest.TestCase):
                 NameTestDTO(id=10, title="Roe"),
             ]
 
-            got_after_update = repo.update_many({"title": "Rene"}, NameTest.id < 10, NameTest.id > 2, title="Roe")
+            got_after_update = repo.update_many({"title": "Rene"}, NameTest.id < 10, "id > 2", title="Roe")
             got_after_get = [NameTestDTO.from_orm(record) for record in
                              session.query(NameTest).order_by(NameTest.id).all()]
 
@@ -237,7 +237,7 @@ class TestSQLAlchemyRepository(unittest.TestCase):
                 NameTestDTO(id=10, title="Roe"),
             ]
 
-            got_after_delete = repo.remove_many(NameTest.id < 10, NameTest.id > 2, title="Roe")
+            got_after_delete = repo.remove_many(NameTest.id < 10, "id > 2", title="Roe")
             got_after_get = [NameTestDTO.from_orm(record) for record in
                              session.query(NameTest).order_by(NameTest.id).all()]
 
