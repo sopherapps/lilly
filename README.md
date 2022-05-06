@@ -515,20 +515,29 @@ uvicorn main:app # for app defined in the main.py module
   - [ ] Mongodb
   - [ ] Couchbase
   - [ ] DiskCache
-- [ ] Add some out-of-the-box base repositories e.g. 
-  - [x] SqlAlchemyRepo (RDBM e.g. PostgreSQL, MySQL etc.)
-  - [x] SQLAlchemyRepo hangs when postgres is used (try running tests)
-  - [ ] RedisRepo
-  - [ ] MemcachedRepo
-  - [ ] RESTAPIRepo
-  - [ ] GraphQLRepo
-  - [ ] RabbitMQRepo
-  - [ ] ActiveMQRepo
-  - [ ] WebsocketsRepo
-  - [ ] KafkaRepo
-  - [ ] MongodbRepo
-  - [ ] CouchbaseRepo
-  - [ ] DiskCacheRepo
+- [ ] Add some out-of-the-box base repositories e.g.
+  - [x] SqlAlchemyRepository (RDBM e.g. PostgreSQL, MySQL etc.)
+  - [x] SQLAlchemyRepository hangs when postgres is used (try running tests)
+  - [ ] RedisRepository
+  - [ ] MemcachedRepository
+  - [ ] RESTAPIRepository
+  - [ ] GraphQLRepository
+  - [ ] RabbitMQRepository
+  - [ ] ActiveMQRepository
+  - [ ] WebsocketsRepository
+  - [ ] KafkaRepository
+  - [ ] MongodbRepository
+  - [ ] CouchbaseRepository
+  - [ ] DiskCacheRepository
+- [ ] Add some out-of-the-box base actions e.g.
+  - [ ] CreateOneAction
+  - [ ] CreateManyAction
+  - [ ] UpdateOneAction
+  - [ ] UpdateManyAction
+  - [ ] ReadOneAction
+  - [ ] ReadManyAction
+  - [ ] DeleteOneAction
+  - [ ] DeleteManyAction
 - [ ] Add some out-of-the-box base route sets
   - [ ] CRUDRouteSet
   - [ ] WebsocketRouteSet
