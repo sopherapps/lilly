@@ -43,8 +43,6 @@ class Repository:
         """
         method to get one record of id `record_id`.
 
-        This should be overridden
-
         Arguments:
             record_id (Any): the ID of the record to be retrieved
             **kwargs (Any): any extra key-word arguments you may need to pass in your particular implementation
@@ -171,8 +169,6 @@ class Repository:
         """
         method to create many records.
 
-        This should be overridden.
-
         Arguments:
             records (list[Any]): the records to be created
             **kwargs (Any): any extra key-word arguments you may need to pass in your particular implementation
@@ -292,8 +288,6 @@ class Repository:
     def remove_one(self, record_id: Any, **kwargs) -> BaseModel:
         """
         method to remove one record of id `record_id`.
-
-        This should be overridden
 
         Arguments:
             record_id (Any): the ID of the record to be removed
