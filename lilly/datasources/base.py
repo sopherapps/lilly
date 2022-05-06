@@ -1,6 +1,6 @@
 """Module defines the DataSource base class"""
 from abc import abstractmethod
-from typing import Any, ContextManager
+from typing import ContextManager
 
 
 class DataSource:

@@ -7,7 +7,7 @@ from unittest.mock import MagicMock, PropertyMock, patch
 from pydantic import BaseModel
 from dotenv import load_dotenv
 from sqlalchemy import Column, Integer, String, Table
-from sqlalchemy.orm import declarative_base, DeclarativeMeta, Session
+from sqlalchemy.orm import declarative_base, DeclarativeMeta
 
 from lilly.datasources import SQLAlchemyDataSource
 from lilly.repositories import SQLAlchemyRepository

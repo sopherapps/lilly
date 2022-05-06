@@ -4,8 +4,16 @@ Tests for the CRUD actions
 import unittest
 from unittest.mock import PropertyMock, patch, MagicMock
 
-from lilly.actions import CreateOneAction, CreateManyAction, ReadOneAction, ReadManyAction, UpdateOneAction, \
-    UpdateManyAction, DeleteOneAction, DeleteManyAction
+from lilly.actions import (
+    CreateOneAction,
+    CreateManyAction,
+    ReadOneAction,
+    ReadManyAction,
+    UpdateOneAction,
+    UpdateManyAction,
+    DeleteOneAction,
+    DeleteManyAction,
+)
 from test.assets.mock_internals import MockRepository, NameTestDTO
 
 
