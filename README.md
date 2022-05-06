@@ -267,20 +267,20 @@ class UsersRepository(Repository):
 To create a new repository, one needs to subclass the `Repository` class and override all the following methods:
 
 - `_get_one(self, datasource_connection: Any, record_id: Any, **kwargs) -> Any` method to get one record of
-    id `record_id`
+  id `record_id`
 - `_get_many(self, datasource_connection: Any, skip: int, limit: int, filters: Dict[Any, Any], **kwargs) -> List[Any]`
-    method to get many records that fulfil the `filters`
-- `_create_one(self, datasource_connection: Any, record: Any, **kwargs) -> Any` method to create one record
-- `_create_many(self, datasource_connection: Any, record: List[Any], **kwargs) -> List[Any]` method to create many
-    records
-- `_update_one(self, datasource_connection: Any, record_id: Any, new_record: Any, **kwargs) -> Any` method to update
-    one record of id `record_id`
-- `_update_many(self, datasource_connection: Any, new_record: Any, filters: Dict[Any, Any], **kwargs) -> Any` method
-    to update many records that fulfil the `filters`
+  method to get many records that fulfil the `filters`
+- `_create_one(self, datasource_connection: Any, record: BaseModel, **kwargs) -> Any` method to create one record
+- `_create_many(self, datasource_connection: Any, record: List[BaseModel], **kwargs) -> List[Any]` method to create many
+  records
+- `_update_one(self, datasource_connection: Any, record_id: Any, new_record: BaseModel, **kwargs) -> Any` method to
+  update one record of id `record_id`
+- `_update_many(self, datasource_connection: Any, new_record: BaseModel, filters: Dict[Any, Any], **kwargs) -> Any`
+  method to update many records that fulfil the `filters`
 - `_remove_one(self, datasource_connection: Any, record_id: Any, **kwargs) -> Any` method to remove one record of
-    id `record_id`
+  id `record_id`
 - `_remove_many(self, datasource_connection: Any, filters: Dict[Any, Any], **kwargs) -> Any` method to remove many
-    records that fulfil the `filters`
+  records that fulfil the `filters`
 - `_datasource(self) -> DataSource` an @property-decorated method to return the DataSource whose `connect()` method is
     to be called in any of the other methods to get its instance.
 - `_to_output_dto(self, record: Any) -> BaseModel` method which converts any record from the data source raw to DTO
@@ -358,6 +358,7 @@ from pydantic import BaseModel
 from lilly.actions import Action
 
 from .repositories import NamesRepository  # A Repository for names
+from .dto import NameCreationRequestDTO # The Data Transfer Object to used when creating a name
 
 
 class GenerateRandomName(Action):
@@ -374,7 +375,7 @@ class GenerateRandomName(Action):
   def run(self) -> BaseModel:
     """Actual method that is run"""
     name = self._generate_random_word()
-    return self._name_repository.create_one({"title": name})
+    return self._name_repository.create_one(NameCreationRequestDTO(title=name))
 
   def _generate_random_word(self):
     """Generates a random word"""
@@ -386,7 +387,7 @@ class GenerateRandomName(Action):
         word += random.choice(self._vowels)
     return word
 
-# The GenerateRandomName action is then used as GenerateRandomName(length=9).run()
+# The GenerateRandomName action is then used in a route as self._do(GenerateRandomName, length=9)
 ```
 
 ## Design
@@ -425,11 +426,11 @@ The following features are required.
   - `get_one(self, record_id: Any, **kwargs) -> Any` method to get one record of id `record_id`
   - `get_many(self, skip: int, limit: int, filters: Dict[Any, Any], **kwargs) -> List[Any]` method to get many records
     that fulfil the `filters`
-  - `create_one(self, record: Any, **kwargs) -> Any` method to create one record
-  - `create_many(self, record: List[Any], **kwargs) -> List[Any]` method to create many records
+  - `create_one(self, record: BaseModel, **kwargs) -> Any` method to create one record
+  - `create_many(self, records: List[BaseModel], **kwargs) -> List[Any]` method to create many records
   - `update_one(self, record_id: Any, new_record: Any, **kwargs) -> Any` method to update one record of id `record_id`
-  - `update_many(self, new_record: Any, filters: Dict[Any, Any], **kwargs) -> Any` method to update many records that
-    fulfil the `filters`
+  - `update_many(self, new_record: BaseModel, filters: Dict[Any, Any], **kwargs) -> Any` method to update many records
+    that fulfil the `filters`
   - `remove_one(self, record_id: Any, **kwargs) -> Any` method to remove one record of id `record_id`
   - `remove_many(self, filters: Dict[Any, Any], **kwargs) -> Any` method to remove many records that fulfil
     the `filters`
@@ -438,13 +439,13 @@ The following features are required.
     id `record_id`
   - `_get_many(self, datasource_connection: Any, skip: int, limit: int, filters: Dict[Any, Any], **kwargs) -> List[Any]`
     method to get many records that fulfil the `filters`
-  - `_create_one(self, datasource_connection: Any, record: Any, **kwargs) -> Any` method to create one record
-  - `_create_many(self, datasource_connection: Any, record: List[Any], **kwargs) -> List[Any]` method to create many
-    records
-  - `_update_one(self, datasource_connection: Any, record_id: Any, new_record: Any, **kwargs) -> Any` method to update
-    one record of id `record_id`
-  - `_update_many(self, datasource_connection: Any, new_record: Any, filters: Dict[Any, Any], **kwargs) -> Any` method
-    to update many records that fulfil the `filters`
+  - `_create_one(self, datasource_connection: Any, record: BaseModel, **kwargs) -> Any` method to create one record
+  - `_create_many(self, datasource_connection: Any, record: List[BaseModel], **kwargs) -> List[Any]` method to create
+    many records
+  - `_update_one(self, datasource_connection: Any, record_id: Any, new_record: BaseModel, **kwargs) -> Any` method to
+    update one record of id `record_id`
+  - `_update_many(self, datasource_connection: Any, new_record: BaseModel, filters: Dict[Any, Any], **kwargs) -> Any`
+    method to update many records that fulfil the `filters`
   - `_remove_one(self, datasource_connection: Any, record_id: Any, **kwargs) -> Any` method to remove one record of
     id `record_id`
   - `_remove_many(self, datasource_connection: Any, filters: Dict[Any, Any], **kwargs) -> Any` method to remove many
@@ -529,15 +530,15 @@ uvicorn main:app # for app defined in the main.py module
   - [ ] MongodbRepository
   - [ ] CouchbaseRepository
   - [ ] DiskCacheRepository
-- [ ] Add some out-of-the-box base actions e.g.
-  - [ ] CreateOneAction
-  - [ ] CreateManyAction
-  - [ ] UpdateOneAction
-  - [ ] UpdateManyAction
-  - [ ] ReadOneAction
-  - [ ] ReadManyAction
-  - [ ] DeleteOneAction
-  - [ ] DeleteManyAction
+- [x] Add some out-of-the-box base actions e.g.
+  - [x] CreateOneAction
+  - [x] CreateManyAction
+  - [x] UpdateOneAction
+  - [x] UpdateManyAction
+  - [x] ReadOneAction
+  - [x] ReadManyAction
+  - [x] DeleteOneAction
+  - [x] DeleteManyAction
 - [ ] Add some out-of-the-box base route sets
   - [ ] CRUDRouteSet
   - [ ] WebsocketRouteSet

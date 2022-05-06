@@ -9,7 +9,10 @@ from pydantic import BaseModel
 
 from lilly.actions import Action
 
+from .dtos import NameCreationRequestDTO
 from .repositories import NamesRepository
+
+_names_repo = NamesRepository()
 
 
 class GenerateRandomName(Action):
@@ -18,7 +21,6 @@ class GenerateRandomName(Action):
     """
     _vowels = "aeiou"
     _consonants = "".join(set(string.ascii_lowercase) - set("aeiou"))
-    _name_repository = NamesRepository()
 
     def __init__(self, length: int = 7):
         self._length = length
@@ -26,7 +28,7 @@ class GenerateRandomName(Action):
     def run(self) -> BaseModel:
         """Actual method that is run"""
         name = self._generate_random_word()
-        return self._name_repository.create_one({"title": name})
+        return _names_repo.create_one(NameCreationRequestDTO(title=name))
 
     def _generate_random_word(self):
         """Generates a random word"""

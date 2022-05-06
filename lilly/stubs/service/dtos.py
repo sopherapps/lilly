@@ -2,7 +2,7 @@
 from pydantic import BaseModel
 
 
-class NameCreationRequestDTO(BaseModel):
+class RandomNameCreationRequestDTO(BaseModel):
     length: int
 
 

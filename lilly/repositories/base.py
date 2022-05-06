@@ -117,7 +117,7 @@ class Repository:
             return [self._to_output_dto(record) for record in records]
 
     @abstractmethod
-    def _create_one(self, datasource_connection: Any, record: Any, **kwargs) -> Any:
+    def _create_one(self, datasource_connection: Any, record: BaseModel, **kwargs) -> Any:
         """
         method to create one record.
 
@@ -125,7 +125,7 @@ class Repository:
 
         Arguments:
             datasource_connection (Any): the connection to the data source as got from DataSource.connect()
-            record (Any): the record to be created
+            record (BaseModel): the record DTO to be created
             **kwargs (Any): any extra key-word arguments you may need to pass in your particular implementation
 
         Returns:
@@ -133,12 +133,12 @@ class Repository:
         """
         raise NotImplementedError()
 
-    def create_one(self, record: Any, **kwargs) -> BaseModel:
+    def create_one(self, record: BaseModel, **kwargs) -> BaseModel:
         """
         method to create one record.
 
         Arguments:
-            record (Any): the record to be created
+            record (BaseModel): the record DTO to be created
             **kwargs (Any): any extra key-word arguments you may need to pass in your particular implementation
 
         Returns:
@@ -149,7 +149,7 @@ class Repository:
             return self._to_output_dto(record)
 
     @abstractmethod
-    def _create_many(self, datasource_connection: Any, records: List[Any], **kwargs) -> List[Any]:
+    def _create_many(self, datasource_connection: Any, records: List[BaseModel], **kwargs) -> List[Any]:
         """
         method to create many records.
 
@@ -157,7 +157,7 @@ class Repository:
 
         Arguments:
             datasource_connection (Any): the connection to the data source as got from DataSource.connect()
-            records (list[Any]): the records to be created
+            records (list[BaseModel]): the records' DTOs to be created
             **kwargs (Any): any extra key-word arguments you may need to pass in your particular implementation
 
         Returns:
@@ -165,12 +165,12 @@ class Repository:
         """
         raise NotImplementedError()
 
-    def create_many(self, records: List[Any], **kwargs) -> List[BaseModel]:
+    def create_many(self, records: List[BaseModel], **kwargs) -> List[BaseModel]:
         """
         method to create many records.
 
         Arguments:
-            records (list[Any]): the records to be created
+            records (list[BaseModel]): the records' DTOs to be created
             **kwargs (Any): any extra key-word arguments you may need to pass in your particular implementation
 
         Returns:
@@ -181,7 +181,7 @@ class Repository:
             return [self._to_output_dto(record) for record in records]
 
     @abstractmethod
-    def _update_one(self, datasource_connection: Any, record_id: Any, new_record: Any, **kwargs) -> Any:
+    def _update_one(self, datasource_connection: Any, record_id: Any, new_record: BaseModel, **kwargs) -> Any:
         """
         method to update one record of id `record_id`.
 
@@ -190,7 +190,7 @@ class Repository:
         Arguments:
             datasource_connection (Any): the connection to the data source as got from DataSource.connect()
             record_id (Any): the ID of the record to be replaced
-            new_record (Any): the record to replace the old record
+            new_record (BaseModel): the record's DTO to replace the old record
             **kwargs (Any): any extra key-word arguments you may need to pass in your particular implementation
 
         Returns:
@@ -198,13 +198,13 @@ class Repository:
         """
         raise NotImplementedError()
 
-    def update_one(self, record_id: Any, new_record: Any, **kwargs) -> BaseModel:
+    def update_one(self, record_id: Any, new_record: BaseModel, **kwargs) -> BaseModel:
         """
         method to update one record of id `record_id`.
 
         Arguments:
             record_id (Any): the ID of the record to be replaced
-            new_record (Any): the record to replace the old record
+            new_record (BaseModel): the record's DTO to replace the old record
             **kwargs (Any): any extra key-word arguments you may need to pass in your particular implementation
 
         Returns:
@@ -215,7 +215,7 @@ class Repository:
             return self._to_output_dto(record)
 
     @abstractmethod
-    def _update_many(self, datasource_connection: Any, new_record: Any, *criterion, **filters) -> List[Any]:
+    def _update_many(self, datasource_connection: Any, new_record: BaseModel, *criterion, **filters) -> List[Any]:
         """
         method to update many records that fulfil the `criterion` and `filters`.
 
@@ -223,7 +223,7 @@ class Repository:
 
         Arguments:
             datasource_connection (Any): the connection to the data source as got from DataSource.connect()
-            new_record (Any): the new record that should replace the records
+            new_record (BaseModel): the new record's DTO that should replace the records
             *criterion (Any): any SQLAlchemy SQL expression object applicable to the WHERE clause of a select.
 
                 e.g.::
@@ -242,12 +242,12 @@ class Repository:
         """
         raise NotImplementedError()
 
-    def update_many(self, new_record: Any, *criterion, **filters) -> List[BaseModel]:
+    def update_many(self, new_record: BaseModel, *criterion, **filters) -> List[BaseModel]:
         """
         method to update many records that fulfil the `criterion` and `filters`.
 
         Arguments:
-            new_record (Any): the new record that should replace the records
+            new_record (BaseModel): the new record's DTO that should replace the records
             *criterion (Any): any SQLAlchemy SQL expression object applicable to the WHERE clause of a select.
 
                 e.g.::

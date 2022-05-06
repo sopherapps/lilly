@@ -11,7 +11,7 @@ from sqlalchemy.orm import declarative_base, DeclarativeMeta
 
 from lilly.datasources import SQLAlchemyDataSource
 from lilly.repositories import SQLAlchemyRepository
-from test.assets.mock_internals import NameTestDTO, MOCK_NAME_RECORDS
+from test.assets.mock_internals import NameTestDTO, MOCK_NAME_RECORDS, NameTestCreationDTO
 
 root_path = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
 test_env_path = os.path.join(root_path, ".env")
@@ -166,7 +166,7 @@ class TestSQLAlchemyRepository(unittest.TestCase):
         ]
         with repo.db_source.connect() as session:
             for expected in test_data:
-                got_after_update = repo.update_one(expected.id, expected.dict())
+                got_after_update = repo.update_one(expected.id, expected)
                 got_after_get = session.query(NameTest).get(expected.id)
 
                 self.assertEqual(expected, got_after_update)
@@ -174,28 +174,28 @@ class TestSQLAlchemyRepository(unittest.TestCase):
 
     def _test_update_many(self, repo: NamesTestRepository):
         """update_many updates many records that fulfill the criteria and filters"""
+        expected_after_update = [
+            NameTestDTO(id=4, title="Rene"),
+            NameTestDTO(id=7, title="Rene"),
+            NameTestDTO(id=8, title="Rene"),
+        ]
+        expected_after_get = [
+            NameTestDTO(id=1, title="Doe"),
+            NameTestDTO(id=2, title="Roe"),
+            NameTestDTO(id=3, title="Doe"),
+            NameTestDTO(id=4, title="Rene"),
+            NameTestDTO(id=5, title="Doe"),
+            NameTestDTO(id=6, title="Doe"),
+            NameTestDTO(id=7, title="Rene"),
+            NameTestDTO(id=8, title="Rene"),
+            NameTestDTO(id=9, title="Doe"),
+            NameTestDTO(id=10, title="Roe"),
+        ]
+        new_data = NameTestCreationDTO(title="Rene")
+
         with repo.db_source.connect() as session:
             self._add_dummy_data(repo.db_source, MOCK_NAME_RECORDS)
-
-            expected_after_update = [
-                NameTestDTO(id=4, title="Rene"),
-                NameTestDTO(id=7, title="Rene"),
-                NameTestDTO(id=8, title="Rene"),
-            ]
-            expected_after_get = [
-                NameTestDTO(id=1, title="Doe"),
-                NameTestDTO(id=2, title="Roe"),
-                NameTestDTO(id=3, title="Doe"),
-                NameTestDTO(id=4, title="Rene"),
-                NameTestDTO(id=5, title="Doe"),
-                NameTestDTO(id=6, title="Doe"),
-                NameTestDTO(id=7, title="Rene"),
-                NameTestDTO(id=8, title="Rene"),
-                NameTestDTO(id=9, title="Doe"),
-                NameTestDTO(id=10, title="Roe"),
-            ]
-
-            got_after_update = repo.update_many({"title": "Rene"}, NameTest.id < 10, "id > 2", title="Roe")
+            got_after_update = repo.update_many(new_data, NameTest.id < 10, "id > 2", title="Roe")
             got_after_get = [NameTestDTO.from_orm(record) for record in
                              session.query(NameTest).order_by(NameTest.id).all()]
 
@@ -250,26 +250,27 @@ class TestSQLAlchemyRepository(unittest.TestCase):
             record_id = index + 1
 
             expected = NameTestDTO(id=record_id, **record)
-            got = repo.create_one(record)
+            got = repo.create_one(NameTestCreationDTO(**record))
             self.assertEqual(expected, got)
 
     def _test_create_many(self, repo: NamesTestRepository):
         """create_many creates many records in the database"""
-        with repo.db_source.connect() as session:
-            expected = [
-                NameTestDTO(id=1, title="Doe"),
-                NameTestDTO(id=2, title="Roe"),
-                NameTestDTO(id=3, title="Doe"),
-                NameTestDTO(id=4, title="Roe"),
-                NameTestDTO(id=5, title="Doe"),
-                NameTestDTO(id=6, title="Doe"),
-                NameTestDTO(id=7, title="Roe"),
-                NameTestDTO(id=8, title="Roe"),
-                NameTestDTO(id=9, title="Doe"),
-                NameTestDTO(id=10, title="Roe"),
-            ]
+        records = [NameTestCreationDTO(**record) for record in MOCK_NAME_RECORDS]
+        expected = [
+            NameTestDTO(id=1, title="Doe"),
+            NameTestDTO(id=2, title="Roe"),
+            NameTestDTO(id=3, title="Doe"),
+            NameTestDTO(id=4, title="Roe"),
+            NameTestDTO(id=5, title="Doe"),
+            NameTestDTO(id=6, title="Doe"),
+            NameTestDTO(id=7, title="Roe"),
+            NameTestDTO(id=8, title="Roe"),
+            NameTestDTO(id=9, title="Doe"),
+            NameTestDTO(id=10, title="Roe"),
+        ]
 
-            got_after_create = repo.create_many(records=MOCK_NAME_RECORDS)
+        with repo.db_source.connect() as session:
+            got_after_create = repo.create_many(records=records)
             got_after_get = [NameTestDTO.from_orm(record) for record in
                              session.query(NameTest).order_by(NameTest.id).all()]
 

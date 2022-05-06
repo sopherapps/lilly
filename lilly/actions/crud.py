@@ -11,10 +11,10 @@ from ..repositories import Repository
 class CreateOneAction(Action):
     """Action to create one item in a repository"""
 
-    def __init__(self, record: Any, **kwargs):
+    def __init__(self, record: BaseModel, **kwargs):
         """
         Arguments:
-            record (Any): the record to be created
+            record (BaseModel): the record to be created
             **kwargs (Any): any extra key-word arguments you may need to pass in your particular implementation
         """
         self._record = record
@@ -39,10 +39,10 @@ class CreateOneAction(Action):
 class CreateManyAction(Action):
     """Action to create many items in the associated repository"""
 
-    def __init__(self, records: List[Any], **kwargs):
+    def __init__(self, records: List[BaseModel], **kwargs):
         """
         Arguments:
-            records (list[Any]): the records to be created
+            records (list[BaseModel]): the records' DTO to be created
             **kwargs (Any): any extra key-word arguments you may need to pass in your particular implementation
         """
         self._records = records
@@ -137,11 +137,11 @@ class ReadManyAction(Action):
 class UpdateOneAction(Action):
     """Action to update one record in the associated repository"""
 
-    def __init__(self, record_id: Any, new_record: Any, **kwargs):
+    def __init__(self, record_id: Any, new_record: BaseModel, **kwargs):
         """
         Arguments:
             record_id (Any): the ID of the record to be replaced
-            new_record (Any): the record to replace the old record
+            new_record (BaseModel): the record's DTO to replace the old record
             **kwargs (Any): any extra key-word arguments you may need to pass in your particular implementation
         """
         self._record_id = record_id
@@ -167,10 +167,10 @@ class UpdateOneAction(Action):
 class UpdateManyAction(Action):
     """Action to update many records in the associated repository"""
 
-    def __init__(self, new_record: Any, *criterion, **filters):
+    def __init__(self, new_record: BaseModel, *criterion, **filters):
         """
         Arguments:
-            new_record (Any): the new record that should replace the records
+            new_record (BaseModel): the new record's DTO that should replace the records
             *criterion (Any): any SQLAlchemy SQL expression object applicable to the WHERE clause of a select.
 
                 e.g.::

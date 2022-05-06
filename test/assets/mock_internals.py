@@ -28,6 +28,10 @@ class NameTestDTO(BaseModel):
         orm_mode = True
 
 
+class NameTestCreationDTO(BaseModel):
+    title: str
+
+
 class MockConnectionContextManager:
     """A mock context manager for the connection to a data source"""
 
