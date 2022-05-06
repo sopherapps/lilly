@@ -333,14 +333,60 @@ class NamesRepository(SQLAlchemyRepository):
 
     @property
     def _dto_cls(self) -> Type[BaseModel]:
-        return NameRecordDTO
+      return NameRecordDTO
 
     @property
     def _datasource(self) -> SQLAlchemyDataSource:
-        return self._names_db
-        
- # The NamesRepository can then be instantiated in the `Actions` subclasses
+      return self._names_db
 
+# The NamesRepository can then be instantiated in the `Actions` subclasses
+
+```
+
+### Actions
+
+To create a new action, one needs to subclass the `Action` class and override the `run()` method.
+
+For instance:
+
+```python
+import random
+import string
+
+from pydantic import BaseModel
+
+from lilly.actions import Action
+
+from .repositories import NamesRepository  # A Repository for names
+
+
+class GenerateRandomName(Action):
+  """
+  Generates a random string and persists it in the data source
+  """
+  _vowels = "aeiou"
+  _consonants = "".join(set(string.ascii_lowercase) - set("aeiou"))
+  _name_repository = NamesRepository()
+
+  def __init__(self, length: int = 7):
+    self._length = length
+
+  def run(self) -> BaseModel:
+    """Actual method that is run"""
+    name = self._generate_random_word()
+    return self._name_repository.create_one({"title": name})
+
+  def _generate_random_word(self):
+    """Generates a random word"""
+    word = ""
+    for i in range(self._length):
+      if i % 2 == 0:
+        word += random.choice(self._consonants)
+      else:
+        word += random.choice(self._vowels)
+    return word
+
+# The GenerateRandomName action is then used as GenerateRandomName(length=9).run()
 ```
 
 ## Design
@@ -483,15 +529,6 @@ uvicorn main:app # for app defined in the main.py module
   - [ ] MongodbRepo
   - [ ] CouchbaseRepo
   - [ ] DiskCacheRepo
-- [ ] Add some out-of-the-box base actions e.g.
-  - [ ] CreateOneAction
-  - [ ] CreateManyAction
-  - [ ] UpdateOneAction
-  - [ ] UpdateManyAction
-  - [ ] ReadOneAction
-  - [ ] ReadManyAction
-  - [ ] DeleteOneAction
-  - [ ] DeleteManyAction
 - [ ] Add some out-of-the-box base route sets
   - [ ] CRUDRouteSet
   - [ ] WebsocketRouteSet
