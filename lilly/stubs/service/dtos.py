@@ -10,6 +10,10 @@ class MessageDTO(BaseModel):
     message: str
 
 
+class NameCreationRequestDTO(BaseModel):
+    title: str
+
+
 class NameRecordDTO(BaseModel):
     id: int
     title: str

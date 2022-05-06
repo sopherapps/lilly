@@ -7,7 +7,18 @@ import string
 
 from pydantic import BaseModel
 
-from lilly.actions import Action
+from lilly.actions import (
+    Action,
+    ReadOneAction,
+    ReadManyAction,
+    CreateOneAction,
+    CreateManyAction,
+    UpdateOneAction,
+    UpdateManyAction,
+    DeleteOneAction,
+    DeleteManyAction,
+)
+from lilly.repositories import Repository
 
 from .dtos import NameCreationRequestDTO
 from .repositories import NamesRepository
@@ -39,3 +50,69 @@ class GenerateRandomName(Action):
             else:
                 word += random.choice(self._vowels)
         return word
+
+
+class CreateOneName(CreateOneAction):
+    """Create a single Name record in the repository"""
+
+    @property
+    def _repository(self) -> Repository:
+        return _names_repo
+
+
+class CreateManyNames(CreateManyAction):
+    """Create a list of name records in the repository"""
+
+    @property
+    def _repository(self) -> Repository:
+        return _names_repo
+
+
+class ReadOneName(ReadOneAction):
+    """Reads a single Name record from the repository"""
+
+    @property
+    def _repository(self) -> Repository:
+        return _names_repo
+
+
+class ReadManyNames(ReadManyAction):
+    """Reads a list of name records from the repository"""
+
+    @property
+    def _repository(self) -> Repository:
+        return _names_repo
+
+
+class UpdateOneName(UpdateOneAction):
+    """Updates a single Name record in the repository"""
+
+    @property
+    def _repository(self) -> Repository:
+        return _names_repo
+
+
+class UpdateManyNames(UpdateManyAction):
+    """Updates a list of name records in the repository"""
+
+    @property
+    def _repository(self) -> Repository:
+        return _names_repo
+
+
+class DeleteOneName(DeleteOneAction):
+    """Deletes a single Name record in the repository"""
+
+    @property
+    def _repository(self) -> Repository:
+        return _names_repo
+
+
+class DeleteManyNames(DeleteManyAction):
+    """
+    Deletes a list of name records in the repository basing on the Criteria passed
+    """
+
+    @property
+    def _repository(self) -> Repository:
+        return _names_repo
