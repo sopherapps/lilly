@@ -1,22 +1,11 @@
 """Tests for the base Repository class"""
 
 import unittest
-from typing import Any
 from unittest.mock import MagicMock, PropertyMock, patch, call
 
 from lilly.datasources import DataSource
 from lilly.repositories import Repository
-
-
-class MockConnectionContextManager:
-    def __init__(self, connection: Any):
-        self._connection = connection
-
-    def __enter__(self):
-        return self._connection
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        pass
+from test.assets.mock_internals import MockConnectionContextManager
 
 
 class TestRepository(unittest.TestCase):
