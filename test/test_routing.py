@@ -5,7 +5,7 @@ from unittest import main, TestCase
 from unittest.mock import patch, Mock
 
 from lilly.actions import Action
-from lilly.routing import RouteSet
+from lilly.routing._base import RouteSet
 
 
 class TestRouteSet(TestCase):
