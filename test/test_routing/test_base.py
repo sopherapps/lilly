@@ -1,11 +1,13 @@
 """
-Module containing tests for routing
+Module containing tests for the base RouteSet
 """
-from unittest import main, TestCase
+from unittest import main
+
+from unittest import TestCase
 from unittest.mock import patch, Mock
 
 from lilly.actions import Action
-from lilly.routing._base import RouteSet
+from lilly.routing import RouteSet
 
 
 class TestRouteSet(TestCase):
