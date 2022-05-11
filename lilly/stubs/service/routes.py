@@ -2,10 +2,7 @@
 Module containing the basic public API of the service.
 These can be exposed as REST API endpoints or websockets
 """
-from typing import List, Optional
-
-from lilly.routing import RouteSet
-from lilly.routing.ext import routeset, get, post, put, delete, patch
+from lilly.routing import CRUDRouteSet, CRUDRouteSetSettings, routeset, get, post, RouteSet
 
 from .dtos import (
     RandomNameCreationRequestDTO,
@@ -27,8 +24,53 @@ from .actions import (
 
 
 @routeset
-class HelloWorld(RouteSet):
-    """Collection of routes for the Hello World domain"""
+class NormalRouteSet(RouteSet):
+    """
+    A basic Class based route that can have any method as an endpoint and can have common variables in the init
+    attached to self
+    """
+
+    def __init__(self):
+        self.name = "Lilly"
+
+    @get("/", response_model=MessageDTO)
+    def home(self):
+        """Home"""
+        return {"message": f"Welcome to {self.name}"}
+
+    @get("/login", response_model=MessageDTO)
+    def login(self):
+        """Login"""
+        return {"message": f"{self.name} invites you to login"}
+
+
+@routeset
+class HelloWorld(CRUDRouteSet):
+    """
+    Class Based Route set that handles CRUD functionality out of the box
+    """
+
+    @classmethod
+    def get_settings(cls) -> CRUDRouteSetSettings:
+        # When an action is not defined, the dependant routes will not be shown
+        return CRUDRouteSetSettings(
+            id_type=int,
+            base_path="/names",
+            base_path_for_multiple_items="/admin/names",
+            response_model=NameRecordDTO,
+            creation_request_model=NameCreationRequestDTO,
+            create_one_action=CreateOneName,
+            create_many_action=CreateManyNames,
+            read_one_action=ReadOneName,
+            read_many_action=ReadManyNames,
+            update_one_action=UpdateOneName,
+            update_many_action=UpdateManyNames,
+            delete_one_action=DeleteOneName,
+            delete_many_action=DeleteManyNames,
+            string_searchable_fields=["title"],
+        )
+
+    # You can add even more routes on the CRUD routeset
 
     @get("/hello/{name}", response_model=MessageDTO)
     def say_hello(self, name: str):
@@ -37,43 +79,3 @@ class HelloWorld(RouteSet):
     @post("/random-names/", response_model=NameRecordDTO)
     def create_random_name(self, request: RandomNameCreationRequestDTO):
         return self._do(GenerateRandomName, length=request.length)
-
-    @post("/names/", response_model=NameRecordDTO)
-    def create_name(self, body: NameCreationRequestDTO):
-        return self._do(CreateOneName, body)
-
-    @post("/admin/names/", response_model=List[NameRecordDTO])
-    def create_many_names(self, body: List[NameCreationRequestDTO]):
-        return self._do(CreateManyNames, body)
-
-    @get("/names/{record_id}", response_model=NameRecordDTO)
-    def read_name(self, record_id: int):
-        return self._do(ReadOneName, record_id)
-
-    @get("/names/", response_model=List[NameRecordDTO])
-    def read_many_names(self, skip: int = 0, limit: Optional[int] = None, q: Optional[str] = None):
-        criteria = []
-        if q is not None:
-            criteria.append(f"title LIKE '%{q}%'")
-
-        return self._do(ReadManyNames, *criteria, skip=skip, limit=limit, )
-
-    @put("/names/{record_id}", response_model=NameRecordDTO)
-    def update_name(self, record_id: int, body: NameRecordDTO):
-        return self._do(UpdateOneName, record_id, body)
-
-    @put("/admin/names/", response_model=List[NameRecordDTO])
-    def update_many_names(self, body: NameCreationRequestDTO, q: str = ""):
-        return self._do(UpdateManyNames, body, f"title LIKE '%{q}%'", )
-
-    @patch("/names/{record_id}", response_model=NameRecordDTO)
-    def update_name_partially(self, record_id: int, body: NameCreationRequestDTO):
-        return self._do(UpdateOneName, record_id, body)
-
-    @delete("/names/{record_id}", response_model=NameRecordDTO)
-    def delete_name(self, record_id: int):
-        return self._do(DeleteOneName, record_id)
-
-    @delete("/admin/names/", response_model=List[NameRecordDTO])
-    def delete_many_names(self, q: str = ""):
-        return self._do(DeleteManyNames, f"title LIKE '%{q}%'", )

@@ -140,7 +140,7 @@ class TestCRUD(unittest.TestCase):
 
     @patch("test.assets.mock_internals.MockRepository.remove_many")
     @patch("lilly.actions.DeleteManyAction._repository", new_callable=PropertyMock)
-    def test_update_many_action(self, mock_repo: PropertyMock, mock_remove_many: MagicMock):
+    def test_delete_many_action(self, mock_repo: PropertyMock, mock_remove_many: MagicMock):
         """DeleteManyAction instance should return the repository's remove_many method's response"""
         expected_response = [NameTestDTO(id=1, title="Some Name")]
         criteria = [8, 5]

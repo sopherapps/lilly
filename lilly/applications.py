@@ -271,7 +271,7 @@ class Lilly(FastAPI):
 
     def _register_router(self):
         """Registers the global router with the current application"""
-        ext = importlib.import_module("lilly.routing.ext")
+        ext = importlib.import_module("lilly.routing")
         register_router = getattr(ext, "register_router")
         register_router(self)
 

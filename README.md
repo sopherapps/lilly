@@ -556,6 +556,112 @@ class DeleteManyNames(DeleteManyAction):
 #  - as well having the address for that name equal to "Kampala"
 ```
 
+### Route Sets
+
+To create a new route set, one needs to subclass the `RouteSet` class and decorate it with `routeset` and decorate each
+method that is to be an endpoint with appropriate the method (HTTP or websocket) decorators like `get`,
+`post` etc.
+
+For instance:
+
+```python
+from lilly.routing import routeset, RouteSet, get, post
+from .dto import MessageDTO  # the Data Transfer Object to pass data around the app
+
+
+@routeset
+class NormalRouteSet(RouteSet):
+  """
+  A basic Class based route that can have any method as an endpoint and can have common variables in the init
+  attached to self
+  """
+
+  def __init__(self):
+    self.name = "Lilly"
+
+  @get("/", response_model=MessageDTO)
+  def home(self):
+    """Home"""
+    return {"message": f"Welcome to {self.name}"}
+
+  @get("/login", response_model=MessageDTO)
+  def login(self):
+    """Login"""
+    return {"message": f"{self.name} invites you to login"}
+```
+
+To make the life of the developer easier, there are some `RouteSet` subclasses that one can inherit from and easily have
+a set of endpoints that fulfill a particular purpose.
+
+They include:
+
+#### 1. CRUDRouteSet
+
+For CRUD (Create-Read-Update-Delete) actions, a RouteSet can be created be by subclassing `CRUDRouteSet`
+and overriding the `get_settings()` class method on it to return the appropriate `CRUDRouteSetSettings` for the given
+route set.
+
+For example:
+
+```python
+from lilly.routing import routeset, CRUDRouteSet, CRUDRouteSetSettings, get, post
+
+from .dto import (
+  NameRecordDTO,
+  NameCreationRequestDTO,
+  MessageDTO,
+  RandomNameCreationRequestDTO,
+)  # The Data Transfer Objects to be used as responses or requests
+from .actions import (
+  CreateOneName,
+  CreateManyNames,
+  ReadOneName,
+  ReadManyNames,
+  UpdateOneName,
+  UpdateManyNames,
+  DeleteOneName,
+  DeleteManyNames,
+  GenerateRandomName,
+)  # The Actions for CRUD
+
+
+@routeset
+class HelloWorld(CRUDRouteSet):
+  """
+  Class Based Route set that handles CRUD functionality out of the box
+  """
+
+  @classmethod
+  def get_settings(cls) -> CRUDRouteSetSettings:
+    # When an action is not defined, the dependant routes will not be shown
+    return CRUDRouteSetSettings(
+      id_type=int,
+      base_path="/names",
+      base_path_for_multiple_items="/admin/names",
+      response_model=NameRecordDTO,
+      creation_request_model=NameCreationRequestDTO,
+      create_one_action=CreateOneName,
+      create_many_action=CreateManyNames,
+      read_one_action=ReadOneName,
+      read_many_action=ReadManyNames,
+      update_one_action=UpdateOneName,
+      update_many_action=UpdateManyNames,
+      delete_one_action=DeleteOneName,
+      delete_many_action=DeleteManyNames,
+      string_searchable_fields=["title"],
+    )
+
+  # You can add even more routes on the CRUD routeset
+
+  @get("/hello/{name}", response_model=MessageDTO)
+  def say_hello(self, name: str):
+    return {"message": f"Hi {name}"}
+
+  @post("/random-names/", response_model=NameRecordDTO)
+  def create_random_name(self, request: RandomNameCreationRequestDTO):
+    return self._do(GenerateRandomName, length=request.length)
+```
+
 ## Design
 
 ### Requirements
@@ -706,7 +812,7 @@ uvicorn main:app # for app defined in the main.py module
   - [x] DeleteOneAction
   - [x] DeleteManyAction
 - [ ] Add some out-of-the-box base route sets
-  - [ ] CRUDRouteSet
+  - [x] CRUDRouteSet
   - [ ] WebsocketRouteSet
   - [ ] GraphQLRoute
 - [ ] Add example code in examples folder
