@@ -1,8 +1,7 @@
 """
 Test routes
 """
-from lilly.routing._base import RouteSet
-from lilly.routing._decorators import routeset, get
+from lilly.routing import routeset, get, RouteSet
 
 from .dtos import MessageDTO
 
