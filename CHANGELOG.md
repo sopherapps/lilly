@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.3.0] - 2022-05-11
+
+### Added
+
+- `CRUDRouteSet` for creating a set of endpoints that handle CRUD related functionality
+- `CRUDRouteSetSettings` for initializing `CRUDRouteSet` route set
+
+### Changed
+
+- All usable items from the `lilly.routing` package can now be accessed directly from the `lilly.routing` package itself
+  and not from `lilly.routing.ext`
+
+### Fixed
+
 ## [0.2.0] - 2022-05-06
 
 ### Added
