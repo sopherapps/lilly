@@ -54,6 +54,7 @@ class HelloWorld(CRUDRouteSet):
     def get_settings(cls) -> CRUDRouteSetSettings:
         # When an action is not defined, the dependant routes will not be shown
         return CRUDRouteSetSettings(
+            id_type=int,
             base_path="/names",
             base_path_for_multiple_items="/admin/names",
             response_model=NameRecordDTO,

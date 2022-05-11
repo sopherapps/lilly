@@ -23,6 +23,7 @@ class CRUDRouteSetSettings(BaseModel):
     The settings for CRUD Route sets
         # TODO: There is need for searching even number fields, or even searching for less or greater
 
+        * id_type (Type[Any]): the data type of the id field for the given DTO in the repository
         * base_path (str) (required): the base path in the REST API for this route set
         * base_path_for_multiple_items (str) (required): the base path in the REST API for this route set when multiple items are considered e.g. create_many
         * response_model (Type[BaseModel]) (required): the BaseModel subclass representing a single returned entity in this route set's response
@@ -37,6 +38,7 @@ class CRUDRouteSetSettings(BaseModel):
         * delete_many_action (Type[DeleteManyAction]): the :ref:`DeleteManyAction <lilly.actions.DeleteManyAction>` subclass to be used to delete multiple instances in the repository
         * string_searchable_fields (List[str]): the list of fields that can be searched as strings during filtering
     """
+    id_type: Type[Any] = int
     base_path: str
     base_path_for_multiple_items: str
     response_model: Type[BaseModel]
@@ -88,7 +90,7 @@ def _generate_crud_route_set(router: APIRouter, cls: Type[CRUDRouteSet]) -> Type
             return self._do(_settings.create_many_action, body)
 
         @router.get(f"{_settings.base_path}/{{record_id}}", response_model=_settings.response_model)
-        def read_one(self, record_id: Any):
+        def read_one(self, record_id: _settings.id_type):
             return self._do(_settings.read_one_action, record_id)
 
         @router.get(f"{_settings.base_path}/", response_model=List[_settings.response_model])
@@ -102,11 +104,11 @@ def _generate_crud_route_set(router: APIRouter, cls: Type[CRUDRouteSet]) -> Type
             return self._do(_settings.read_many_action, *criteria, skip=skip, limit=limit, )
 
         @router.put(f"{_settings.base_path}/{{record_id}}", response_model=_settings.response_model)
-        def update_one(self, record_id: int, body: _settings.response_model):
+        def update_one(self, record_id: _settings.id_type, body: _settings.response_model):
             return self._do(_settings.update_one_action, record_id, body)
 
         @router.patch(f"{_settings.base_path}/{{record_id}}", response_model=_settings.response_model)
-        def update_partial(self, record_id: int, body: _settings.creation_request_model):
+        def update_partial(self, record_id: _settings.id_type, body: _settings.creation_request_model):
             return self._do(_settings.update_one_action, record_id, body)
 
         @router.put(f"{_settings.base_path_for_multiple_items}/", response_model=List[_settings.response_model])
@@ -115,7 +117,7 @@ def _generate_crud_route_set(router: APIRouter, cls: Type[CRUDRouteSet]) -> Type
             return self._do(_settings.update_many_action, body, query, )
 
         @router.delete(f"{_settings.base_path}/{{record_id}}", response_model=_settings.response_model)
-        def delete_one(self, record_id: int):
+        def delete_one(self, record_id: _settings.id_type):
             return self._do(_settings.delete_one_action, record_id)
 
         @router.delete(f"{_settings.base_path_for_multiple_items}/", response_model=List[_settings.response_model])
